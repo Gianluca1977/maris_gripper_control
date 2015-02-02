@@ -49,12 +49,6 @@ void main_shutdown()
 int main(int argc, char** argv)
 {
     TPCANMsg msg;
-    unsigned int cnt;
-
-
-    int nodeID, cmdID;
-
-    std::vector<bool> auxbool;
 
     int ret;   
 

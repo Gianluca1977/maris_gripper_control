@@ -197,7 +197,7 @@ void TcpSend::rt_thread_handler()
         WF::Task::Exit();
     }
 
-    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TCPSENDTASK_NAME, "TcpSend Created");
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TCPSENDTASK_NAME, "TcpSend Created %d", sizeof(SystemStatus));
 
     if_task->SetReadyUntilPostInit();
     if_task->WaitRunning();
