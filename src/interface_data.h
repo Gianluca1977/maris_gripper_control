@@ -62,7 +62,7 @@ typedef struct
     bool emerg_stop;
     bool resetSensors;
 
-    bool fake_align[9];	//align with 64 bit grafic interface
+    bool fake_align[12];	//align with 64 bit grafic interface
 } SystemStatus;
 
 /* ****************************** */
