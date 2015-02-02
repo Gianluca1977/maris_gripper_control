@@ -30,8 +30,7 @@
 #include "opencan.h"
 #include "opencan_scheduler_helper.h"
 #include "controllerdata.h"
-
-#define VM_TEST
+#include "can_define.h"
 
 #define HAND_START_NODE_ID		0x00A
 #define HAND_END_NODE_ID        0x01A
