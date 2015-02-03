@@ -35,12 +35,12 @@ public:
     union {
         int State;
         char State_byte[2];
-    }
+    };
 
     union {
         int Old_State;
         char Old_State_byte[2];
-    }
+    };
 
     long Velocity;	//last found vel
     long Position;	//last found pos
