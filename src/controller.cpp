@@ -53,22 +53,11 @@ void CtrlHandler::rt_thread_handler()
 
     std::vector<int> auxNode;
 
-    double baseMin = safeJointOffset*360/jointReduction;
-
-    double auxVal;
-    int auxHome = 0;
-
     auxNode.reserve(NUM_MOT);
     for(cnt = 0; cnt < NUM_MOT; cnt++)
         auxNode.push_back(Motors[cnt].ID);
 
     std::vector<long> data(NUM_MOT,0);
-    std::vector<long> final_pos(NUM_MOT,100000);
-    std::vector<long> home_pos(NUM_MOT,BASEJOINT_OFFSET);
-    std::vector<double> des_pos(NUM_MOT,0);
-
-    std::vector<double> xp(NUM_MOT,0);
-    std::vector<double> yp(NUM_MOT,0);
 
     action_done = false;
 
@@ -165,7 +154,7 @@ void CtrlHandler::rt_thread_handler()
                     nextPhase = INIT_SHUTDOWN_DEV;
 
                     for(cnt = 0; cnt < dof; cnt++){
-                        if(Motors[cnt].State & STATUS_WORD_MASK != SWITCH_ON_DISABLED) nextPhase = INIT_START_DEV;
+                        if((Motors[cnt].State & STATUS_WORD_MASK) != SWITCH_ON_DISABLED) nextPhase = INIT_START_DEV;
                         else auxNode.at(cnt) = 0;
                     }
 
@@ -179,10 +168,9 @@ void CtrlHandler::rt_thread_handler()
                     nextPhase = INIT_SWITCH_ON_DEV;
 
                     for(cnt = 0; cnt < dof; cnt++){
-                        if(Motors[cnt].State & STATUS_WORD_MASK != READY_TO_SWITCH_ON) nextPhase = INIT_SHUTDOWN_DEV;
+                        if((Motors[cnt].State & STATUS_WORD_MASK) != READY_TO_SWITCH_ON) nextPhase = INIT_SHUTDOWN_DEV;
                         else auxNode.at(cnt) = 0;
-                        KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "CtrlHandler::rt_thread_handler", "ID = %X,  State = %X, initPhase = %d", Motors[cnt].ID, Motors[cnt].State, initPhase);
-                    }                     
+                    }
 
                     if(initPhase != nextPhase) for(cnt = 0; cnt < dof; cnt++) auxNode.at(cnt) = Motors[cnt].ID;
                     initPhase = nextPhase;
@@ -193,7 +181,7 @@ void CtrlHandler::rt_thread_handler()
                     initTime = true;
                     nextPhase = INIT_ENABLE_OP_DEV;
                     for(cnt = 0; cnt < dof; cnt++){
-                        if(Motors[cnt].State & STATUS_WORD_MASK != SWITCHED_ON) nextPhase = INIT_SWITCH_ON_DEV;
+                        if((Motors[cnt].State & STATUS_WORD_MASK) != SWITCHED_ON) nextPhase = INIT_SWITCH_ON_DEV;
                         else auxNode.at(cnt) = 0;
                     }
 
@@ -206,7 +194,7 @@ void CtrlHandler::rt_thread_handler()
                     initTime = true;
                     nextPhase = INIT_ENABLED;
                     for(cnt = 0; cnt < dof; cnt++){
-                        if(Motors[cnt].State & STATUS_WORD_MASK != OPERATION_ENABLED) nextPhase = INIT_ENABLE_OP_DEV;
+                        if((Motors[cnt].State & STATUS_WORD_MASK) != OPERATION_ENABLED) nextPhase = INIT_ENABLE_OP_DEV;
                         else auxNode.at(cnt) = 0;
                     }
 
@@ -217,10 +205,10 @@ void CtrlHandler::rt_thread_handler()
                 case INIT_ENABLED:
                     if(fromFault) nextPhase = INIT_DONE;
                     else{
-                          KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "All devices has been initialized! Configuring it... ");
-                          initTime = true;
-                          nextPhase = INIT_TRACE_CONF;
-                          for(cnt = 0; cnt < dof; cnt++) auxNode.at(cnt) = Motors[cnt].ID;
+                        KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "All devices has been initialized! Configuring it... ");
+                        initTime = true;
+                        nextPhase = INIT_TRACE_CONF;
+                        for(cnt = 0; cnt < dof; cnt++) auxNode.at(cnt) = Motors[cnt].ID;
                     }
 
                     initPhase = nextPhase;
@@ -282,18 +270,18 @@ void CtrlHandler::rt_thread_handler()
 
         case SRV_MODE_RECOVER:
             //if(candriver->isInitialized_){
-        //recover devices;
-                if(fault && !doHome && isHomeDone){ //check for operative fault
-                    for(cnt = 0; cnt < dof; cnt++)
-                    {
-                        if(!Motors[cnt].Operational) auxNode.at(cnt) = Motors[cnt].ID;
-                        else auxNode.at(cnt) = 0;
-                    }//for(cnt = 0; cnt < dof; cnt++){
-                }
+            //recover devices;
+            if(fault && !doHome && isHomeDone){ //check for operative fault
+                for(cnt = 0; cnt < dof; cnt++)
+                {
+                    if(!Motors[cnt].Operational) auxNode.at(cnt) = Motors[cnt].ID;
+                    else auxNode.at(cnt) = 0;
+                }//for(cnt = 0; cnt < dof; cnt++){
+            }
 
-                for(cnt = 0; cnt < dof; cnt++) if(Motors[cnt].State == FAULT_STATE) initPhase = INIT_FAULT;
+            for(cnt = 0; cnt < dof; cnt++) if(Motors[cnt].State == FAULT_STATE) initPhase = INIT_FAULT;
 
-                srv_mode = SRV_MODE_INIT_DEVICES;
+            srv_mode = SRV_MODE_INIT_DEVICES;
 
 
             //}//if(candriver->isInitialized_)
@@ -305,7 +293,7 @@ void CtrlHandler::rt_thread_handler()
             break;
 
         case SRV_MODE_STOP:
-       // if(candriver->isInitialized_){
+            // if(candriver->isInitialized_){
             if(emerg_stop) emerg_stop = false;
             else
             {
@@ -313,16 +301,16 @@ void CtrlHandler::rt_thread_handler()
                 initPhase = INIT_BOOTUP_DEV;
                 action_free = true;
             }
-       // }
-        break;
+            // }
+            break;
 
         case SRV_MODE_HOMING:
             //homing
-           // if(candriver->isInitialized_)
-            {
-                doHome = true;
-                isHomeDone = false;
-            }
+            // if(candriver->isInitialized_)
+        {
+            doHome = true;
+            isHomeDone = false;
+        }
             break;
 
         case SRV_MODE_DO_NOTHING:
@@ -434,28 +422,28 @@ void CtrlHandler::rt_thread_handler()
             /************* big control if using ROS interface*************/
             if(isHomeDone &&  !fault && !emerg_stop){
                 //fKinematics();
-                    switch(srv_preshape){
-                    case 0:
+                switch(srv_preshape){
+                case 0:
 
                     break;
-                    case 1:
+                case 1:
 
                     break;
-                    default:
+                default:
                     break;
-                    }//switch((srv_preshape)
+                }//switch((srv_preshape)
 
-                    if(emerg_stop){
-                        data.assign(dof,0);
-                        srv_preshape = -1;
-                        auxInternalCall = -1;
-                        action_free = true;
-                        action_done = false;
-                    }
-                    if(fault)//se qualche Motore in fault fermi tutti.
-                        data.assign(dof,0);
+                if(emerg_stop){
+                    data.assign(dof,0);
+                    srv_preshape = -1;
+                    auxInternalCall = -1;
+                    action_free = true;
+                    action_done = false;
+                }
+                if(fault)//se qualche Motore in fault fermi tutti.
+                    data.assign(dof,0);
 
-                    //moveVel(data);
+                //moveVel(data);
 
             }//big control if
 
@@ -605,12 +593,12 @@ void PubJointState::rt_thread_handler()
 
             if(Request.doHome)
                 //tcpDoHome = true;
-            if(Request.manualHomeDone)
-                isHomeDone = true;
+                if(Request.manualHomeDone)
+                    isHomeDone = true;
             if(Request.highLevel)
                 setTactOffset = true;
         }
-       // if(tcp!=NULL) TcpActive = Request.tcpActive;
+        // if(tcp!=NULL) TcpActive = Request.tcpActive;
 
         //rosInter->pubJointStates(ros_msg);
         if_task->WaitPeriod();
@@ -633,7 +621,7 @@ Controller::Controller() : Gripper(nodeIds)
 // Gripper Class Destructor
 Controller::~Controller()
 {
-	//delete this->rosInter;
+    //delete this->rosInter;
     if(TcpActive){
     }
 }
