@@ -19,34 +19,7 @@
 #define INIT_FAULT          11
 #define INIT_CLOSE          12
 #define INIT_NONE           13
-/*
-struct MotorData
-{
-    int ID;
 
-    int MaxHomePeak;
-    int MaxHomeCont;
-    int MaxVel;
-    int MaxAcc;
-    int MaxDeacc;
-
-    int State;
-    int Old_State;
-
-    long Velocity;	//last found vel
-    long Position;	//last found pos
-    long Current;
-    long Control;
-    double PositionGrad;
-    double MaxPosGrad;
-    double MinPosGrad;
-
-    bool Operational;
-    bool PosReached;
-    bool BootUp;
-    bool Fault;
-};
-*/
 class Motor : virtual public CanInterface
 {
 public:
@@ -59,8 +32,15 @@ public:
     int MaxAcc;
     int MaxDeacc;
 
-    int State;
-    int Old_State;
+    union {
+        int State;
+        char State_byte[2];
+    }
+
+    union {
+        int Old_State;
+        char Old_State_byte[2];
+    }
 
     long Velocity;	//last found vel
     long Position;	//last found pos

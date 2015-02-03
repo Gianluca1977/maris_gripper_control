@@ -93,6 +93,8 @@ void Gripper::updateStates(TPCANMsg msg) {
                 Motors[i].State = msg.DATA[0];
                 Motors[i].State = (Motors[i].State << 8) & msg.DATA[1];
 
+                KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "States Update", "ID = %X,  State = %X%X, %d", Motors[i].ID, msg.DATA[0], msg.DATA[1], Motors[i].State);
+
                 Motors[i].Operational = false;
                 Motors[i].Fault = false;
 

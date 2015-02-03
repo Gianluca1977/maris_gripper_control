@@ -572,7 +572,7 @@ void PubJointState::rt_thread_handler()
 
             /* aggiorna interfaccia tcp */
             if(TcpActive){
-                Status.Velocity[i] = auxDouble*3.35;
+                Status.Velocity[i] = Motors[i].Velocity;//auxDouble*3.35;
                 Status.PositionGrad[i] = Motors[i].Position;
                 Status.Current[i] = Motors[i].Current;
                 Status.Control[i] = Motors[i].Control;
