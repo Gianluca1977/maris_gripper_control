@@ -51,7 +51,7 @@ public:
     double MinPosGrad;
 
     bool Operational;
-    bool PosReached;
+    bool TargetReached;
     bool BootUp;
     bool Fault;
 
@@ -68,6 +68,10 @@ public:
     void disable();
     void reset();
     void init(int phase);
+
+    void stateUpdate(char data[]);
+
+    bool stateChanged(){return (State != Old_State);}
 
     void setHomePosition();
     void setMaxAcc(long maxAcc = 1);

@@ -8,7 +8,7 @@ Motor::Motor()
 {
     Control = 0;
     Operational = false;
-    PosReached = false;
+    TargetReached = false;
     Fault = false;
     Old_State = STATE_NONE;
     Position = ERR_VAL;
@@ -191,7 +191,22 @@ void Motor::init(int phase) {
         break;
     }
 
-}//bool initCan()
+}
+
+void Motor::stateUpdate(char data[])
+{
+    Old_State = State;
+
+    State_byte[0] = data[0];
+    State_byte[1] = data[1];
+
+    TargetReached = State & TARGET_MASK;
+
+    //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "States Update", "ID = %X,  State = %X%X, %X, Old_State = %X", ID, msg.DATA[1], msg.DATA[0], State, Old_State);
+
+    Operational = ((Motors[i].State & STATUS_WORD_MASK) == OPERATION_ENABLED);
+    Fault = State & FAULT_STATE;
+}
 
 
 
