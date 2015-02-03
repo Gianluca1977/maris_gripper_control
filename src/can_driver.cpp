@@ -12,7 +12,6 @@
 std::queue<TPCANMsg> CanInterface::msg_outqueue;
 OpenCAN::OpenCANSchedulerHelper CanDriver::schedHelper_;
 OpenCAN::CANOpenMsg CanDriver::tmpCANMsg;
-TPCANMsg CanDriver::sync_msg;
 
 TPCANMsg CanInterface::command[] = {
     //    #define CMD_OPENCAN_NMT_RESET 				0
@@ -132,15 +131,8 @@ CanDriver::CanDriver()
     canPayload[0] = 0x81;
     canPayload[1] = 0x00;
 
-    memset((uint8_t *) &sync_msg, 0x00, sizeof(TPCANMsg));
-
-    // Declare sync message
-    sync_msg.ID = 0x080;
-    sync_msg.LEN = 0x00;
-
     // Declare recv mailbox
     sprintf(mbxName, "CANSampleMB");
-
 
     KAL::DebugConsole::Write(LOG_LEVEL_WARNING, "CanDriver", "Calling CanDriver::CanDriver()");
 
@@ -198,7 +190,7 @@ void CanDriver::send_sync_msg()
 {
     //KAL::DebugConsole::Write(LOG_LEVEL_INFO, "CANSampleMB", "Send CAN SYNC msg ID = %03X TYPE = %02X LEN = %d DATA = %02X %02X %02X %02X %02X %02X %02X %02X", sync_msg.ID, sync_msg.MSGTYPE, sync_msg.LEN, sync_msg.DATA[0], sync_msg.DATA[1], sync_msg.DATA[2], sync_msg.DATA[3], sync_msg.DATA[4], sync_msg.DATA[5], sync_msg.DATA[6], sync_msg.DATA[7]);
 #ifndef VM_TEST
-    schedHelper_.Send(&sync_msg, sizeof(TPCANMsg));
+    schedHelper_.Send(&(command[CMD_OPENCAN_SYNC]), sizeof(TPCANMsg));
 #endif
 }
 

@@ -11,16 +11,16 @@ StateMachine::StateMachine(int maxStates) :
 
 // generates an external event. called once per external event
 // to start the state machine executing
-void StateMachine::ExternalEvent(unsigned char newState,
-                                 EventData* pData)
+void StateMachine::ExternalEvent(unsigned char newState, EventData* pData)
 {
     // if we are supposed to ignore this event
-    if (newState == EVENT_IGNORED) {
+    if (newState == EVENT_IGNORED)
+    {
         // just delete the event data, if any
-        if (pData)
-            delete pData;
+        if (pData) delete pData;
     }
-    else {
+    else
+    {
         // generate the event and execute the state engine
         InternalEvent(newState, pData);
         StateEngine();
@@ -29,8 +29,7 @@ void StateMachine::ExternalEvent(unsigned char newState,
 
 // generates an internal event. called from within a state
 // function to transition to a new state
-void StateMachine::InternalEvent(unsigned char newState,
-                                 EventData* pData)
+void StateMachine::InternalEvent(unsigned char newState, EventData* pData)
 {
     _pEventData = pData;
     _eventGenerated = true;

@@ -150,7 +150,6 @@ public:
 class CanDriver : virtual private CanInterface
 {
     static OpenCAN::CANOpenMsg tmpCANMsg;
-    static TPCANMsg sync_msg;
 
 public:
     CanDriver();
