@@ -181,7 +181,8 @@ void CtrlHandler::rt_thread_handler()
                     for(cnt = 0; cnt < dof; cnt++){
                         if(Motors[cnt].State & STATUS_WORD_MASK != READY_TO_SWITCH_ON) nextPhase = INIT_SHUTDOWN_DEV;
                         else auxNode.at(cnt) = 0;
-                    }
+                        KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "CtrlHandler::rt_thread_handler", "ID = %X,  State = %X, initPhase = %d", Motors[cnt].ID, Motors[cnt].State, initPhase);
+                    }                     
 
                     if(initPhase != nextPhase) for(cnt = 0; cnt < dof; cnt++) auxNode.at(cnt) = Motors[cnt].ID;
                     initPhase = nextPhase;
