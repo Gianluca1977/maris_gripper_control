@@ -160,8 +160,8 @@ void Motor::init(int phase) {
 
         setMaxDeacc(MaxDeacc);	//#Set standard max Deceleration
 
-        setMaxPeakCurr(MaxHomePeak);
-        setMaxContCurr(MaxHomeCont);
+        setMaxPeakCurr(MaxHomePeak); //#Set max Peak Current
+        setMaxContCurr(MaxHomeCont); //#Set max Continuous Current
         break;
 
     case INIT_TRACE_CONF:

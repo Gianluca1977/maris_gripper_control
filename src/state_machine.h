@@ -1,7 +1,7 @@
 #ifndef STATE_MACHINE_H
 #define STATE_MACHINE_H
 #include <stdio.h>
-#include "EventData.h"
+#include "event_data.h"
 
 struct StateStruct;
 

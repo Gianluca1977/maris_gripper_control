@@ -510,47 +510,21 @@ void PubJointState::rt_thread_handler()
     if_task->WaitRunning();
     if_task->GotoSoft();
 
-#ifndef ROS_IF
+
     while(if_task->Continue()){
-#else
-    while(if_task->Continue() && rosInter->okInterface()){
-        rosInter->spinInterface();
-#endif
-        /*
-        printf("sizeof(SystemStatus) = %d\n", sizeof(SystemStatus));
-        printf("homePhase: %d\n", homePhase);
-        printf("initPhase: %d\n", initPhase);
-        printf("srv_mode: %d\n",srv_mode);
-        printf("srv_preshape: %d\n", srv_preshape);
-        if(candriver->isInitialized_)
-            printf("Motorss Initialized: true\n");
-        else
-            printf("Motorss Initialized: false\n");
-        if(emerg_stop)
-            printf("Motorss STOPPED\n");
-        else
-            printf("Motorss FREE\n");
-        if(candriver->resetSensors)
-            printf("Reset sensors = true \n");
-        else
-            printf("Reset sensors = false \n");
-        for(unsigned int i =0; i<NUM_MOT;i++){
-            printf("Motors[%d].ID: %d\n",i,Motors[i].ID);
-            printf("Motors[%d].Position_grad: %f\n",i,Motors[i].Position_grad);
-            printf("Motors[%d].last_curr: %ld\n",i,Motors[i].last_curr);
-            printf("Motors[%d].last_ctrl: %ld\n",i,Motors[i].last_ctrl);
-            printf("Motors[%d].statusword_low: %02x\n",i,Motors[i].statusword_low);
-        //	printf("Motors[%d].statusword_high: %02x\n",i,Motors[i].statusword_high);
-
-        }*/
-
+#ifdef ROS_IF
+        if(rosInter->okInterface()) rosInter->spinInterface();
+#endif        
         // read and publish joint angles and velocities
         for(unsigned int i=0; i<NUM_MOT;i++)
         {
-            /*
-            ros_msg.position[i] = roundToSignificant(Motors[i].Position_grad, 4);
-            ros_msg.effort[i] = roundToSignificant(Motors[i].last_curr, 4);
-            */
+#ifdef ROS_IF
+            if(rosInter->okInterface())
+            {
+                ros_msg.position[i] = roundToSignificant(Motors[i].Position_grad, 4);
+                ros_msg.effort[i] = roundToSignificant(Motors[i].last_curr, 4);
+            }
+#endif
             auxDouble = PUBJTASK_SAMPLETIME*pow(10,-11);
             auxDouble = (Motors[i].PositionGrad-Position[i])/auxDouble;
 
