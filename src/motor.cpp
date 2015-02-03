@@ -204,7 +204,7 @@ void Motor::stateUpdate(char data[])
 
     //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "States Update", "ID = %X,  State = %X%X, %X, Old_State = %X", ID, msg.DATA[1], msg.DATA[0], State, Old_State);
 
-    Operational = ((Motors[i].State & STATUS_WORD_MASK) == OPERATION_ENABLED);
+    Operational = ((State & STATUS_WORD_MASK) == OPERATION_ENABLED);
     Fault = State & FAULT_STATE;
 }
 
