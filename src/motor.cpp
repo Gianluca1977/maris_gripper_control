@@ -190,10 +190,9 @@ void Motor::init(int phase) {
     default:
         break;
     }
-
 }
 
-void Motor::stateUpdate(char data[])
+void Motor::stateUpdate(unsigned char data[])
 {
     Old_State = State;
 

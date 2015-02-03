@@ -68,7 +68,8 @@ void Gripper::updateStates(TPCANMsg msg) {
 
     for(int i = 0; i < NUM_MOT; i++) {
         if(Motors[i].ID == nodeID) {
-            if(cmdID == TPDO3_COBID) {	//0x380(896D) - trace response
+            if(cmdID == TPDO3_COBID) //0x380(896D) - trace response
+            {
                 long tmp_curr = msg.DATA[5];
                 Motors[i].Current = (tmp_curr << 8) + msg.DATA[4];
 
@@ -77,35 +78,39 @@ void Gripper::updateStates(TPCANMsg msg) {
                 //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "States Update", "ID = %X,  curr = %X%X, pos = %X%X%X%X", Motors[i].ID, msg.DATA[5], msg.DATA[4], msg.DATA[3], msg.DATA[2], msg.DATA[1], msg.DATA[0] );
 
             }//if(cmdID == TPDO3_COBID)
-            else if(cmdID == TPDO2_COBID) {	//0x280(640D) - TxPDO2 response
-                if(msg.DATA[0] == 0x2B){
+            else if(cmdID == TPDO2_COBID) //0x280(640D) - TxPDO2 response
+            {
+                if(msg.DATA[0] == 0x2B)
+                {
                     Motors[i].Velocity = pcanData2Double(msg,1)*360/jointReduction;
                     //    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "States Update", "ID = %X,  vel = %X%X%X%X", Motors[i].ID, msg.DATA[4], msg.DATA[3], msg.DATA[2], msg.DATA[1]);
-                } else if(msg.DATA[0] == 0x40){
+                }
+                else if(msg.DATA[0] == 0x40)
+                {
                     Motors[i].PositionGrad = pcanData2Double(msg,1)*360/jointReduction;
                     //   KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "States Update", "ID = %X,  pos = %X%X%X%X", Motors[i].ID, msg.DATA[4], msg.DATA[3], msg.DATA[2], msg.DATA[1]);
                 }
             }//else if(cmdID == TPDO2_COBID)
-            else if(cmdID == TPDO1_COBID) {//0x180(384D) - TxPDO1 (statusWord)
-
+            else if(cmdID == TPDO1_COBID) //0x180(384D) - TxPDO1 (statusWord)
+            {
                 Motors[i].stateUpdate(msg.DATA);
 
                 if(Motors[i].stateChanged())
                     switch(Motors[i].State & STATUS_WORD_MASK){
                     case SWITCH_ON_DISABLED:
-                            KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Motor %d Switch On Disabled.", Motors[i].ID);
+                        KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Motor %d Switch On Disabled.", Motors[i].ID);
                         break;
                     case READY_TO_SWITCH_ON:
-                            KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Motor %d Ready to Switch On.", Motors[i].ID);
+                        KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Motor %d Ready to Switch On.", Motors[i].ID);
                         break;
                     case SWITCHED_ON:
-                            KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Motor %d Switched On.", Motors[i].ID);
+                        KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Motor %d Switched On.", Motors[i].ID);
                         break;
                     case OPERATION_ENABLED:
-                            KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Motor %d Operation Enabled.", Motors[i].ID);
+                        KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Motor %d Operation Enabled.", Motors[i].ID);
                         break;
                     case FAULT_STATE:
-                            KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Motors %d Fault Detected. Reset Motors.", Motors[i].ID);
+                        KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Motor %d Fault Detected. Reset Motors.", Motors[i].ID);
                         break;
                     case QUICKSTOP:
                         break;
@@ -113,10 +118,12 @@ void Gripper::updateStates(TPCANMsg msg) {
                         break;
                     }
 
-            } else if(cmdID == BOOTUP_COBID) {	//0x700 (1972D) - Boot up message
+            } else if(cmdID == BOOTUP_COBID) //0x700 (1972D) - Boot up message
+            {
                 Motors[i].BootUp = true;
-                KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Motors %d booted up.", Motors[i].ID);
+                KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Motor %d booted up.", Motors[i].ID);
             }
+            break;
         }//if(Motors[i].ID == nodeID){
     }//for(int i=0; i<NUM_MOT;i++){
 

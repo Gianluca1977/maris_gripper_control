@@ -69,7 +69,7 @@ public:
     void reset();
     void init(int phase);
 
-    void stateUpdate(char data[]);
+    void stateUpdate(unsigned char data[]);
 
     bool stateChanged(){return (State != Old_State);}
 

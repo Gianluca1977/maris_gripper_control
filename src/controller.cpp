@@ -47,8 +47,6 @@ void CtrlHandler::rt_thread_handler()
 
     int ret = 0;
 
-    double perc_comp = 0;
-    //double soma_des = 0;
     unsigned int cnt = 0;
 
     std::vector<int> auxNode;
@@ -256,7 +254,7 @@ void CtrlHandler::rt_thread_handler()
                     initTime = true;
                     for(cnt = 0; cnt < dof; cnt++){
                         auxNode.at(cnt) = Motors[cnt].ID;
-                        if(Motors[cnt].State & STATUS_WORD_ERR_MASK != FAULT_STATE) auxNode.at(cnt) = 0;
+                        if(!Motors[cnt].Fault) auxNode.at(cnt) = 0;
                     }
 
                     initPhase = nextPhase;
@@ -269,23 +267,13 @@ void CtrlHandler::rt_thread_handler()
             break;
 
         case SRV_MODE_RECOVER:
-            //if(candriver->isInitialized_){
             //recover devices;
-            if(fault && !doHome && isHomeDone){ //check for operative fault
-                for(cnt = 0; cnt < dof; cnt++)
-                {
-                    if(!Motors[cnt].Operational) auxNode.at(cnt) = Motors[cnt].ID;
-                    else auxNode.at(cnt) = 0;
-                }//for(cnt = 0; cnt < dof; cnt++){
+            for(cnt = 0; cnt < dof; cnt++) if(Motors[cnt].Fault)
+            {
+                initPhase = INIT_FAULT;
+                break;
             }
-
-            for(cnt = 0; cnt < dof; cnt++) if(Motors[cnt].State == FAULT_STATE) initPhase = INIT_FAULT;
-
             srv_mode = SRV_MODE_INIT_DEVICES;
-
-
-            //}//if(candriver->isInitialized_)
-
             break;
 
         case SRV_MODE_TACTILE_OFFSET:
@@ -293,24 +281,14 @@ void CtrlHandler::rt_thread_handler()
             break;
 
         case SRV_MODE_STOP:
-            // if(candriver->isInitialized_){
-            if(emerg_stop) emerg_stop = false;
-            else
-            {
-                emerg_stop = true;
-                initPhase = INIT_BOOTUP_DEV;
-                action_free = true;
-            }
-            // }
+            emerg_stop = false;
+            initPhase = INIT_BOOTUP_DEV;
+            action_free = true;
             break;
 
         case SRV_MODE_HOMING:
-            //homing
-            // if(candriver->isInitialized_)
-        {
             doHome = true;
             isHomeDone = false;
-        }
             break;
 
         case SRV_MODE_DO_NOTHING:
