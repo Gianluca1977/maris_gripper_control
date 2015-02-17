@@ -42,7 +42,7 @@ struct StateStruct
     const StateStruct* GetStateMap() {\
     static const StateStruct StateMap[] = {
 
-#define STATE_MAP_ENTRY(in,state,out)\
+#define STATE_MAP_ENTRY(state)\
     { reinterpret_cast<StateFunc>(state) },
 
 #define END_STATE_MAP \
