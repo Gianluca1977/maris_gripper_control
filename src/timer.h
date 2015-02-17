@@ -24,9 +24,9 @@ class Timer : public StateMachine
 
     // state map to define state function order
     BEGIN_STATE_MAP
-        STATE_MAP_ENTRY(ST_Idle)
-        STATE_MAP_ENTRY(ST_Running)
-        STATE_MAP_ENTRY(ST_Expired)
+        STATE_MAP_ENTRY(&ST_Idle)
+        STATE_MAP_ENTRY(&ST_Running)
+        STATE_MAP_ENTRY(&ST_Expired)
     END_STATE_MAP
 
     // state enumeration order must match the order of state
