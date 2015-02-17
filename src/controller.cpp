@@ -583,3 +583,8 @@ void Controller::process_message(TPCANMsg msg)
     if(hasID(msg.ID & NODE_ID_MASK)) updateStates(msg);
 }
 
+Timer::Timer(long long expire_time) : timeout(expire_time)
+{
+   isRunning = false;
+   isExpired = false;
+}
