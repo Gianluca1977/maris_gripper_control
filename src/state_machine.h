@@ -46,9 +46,9 @@ struct StateStruct
     { reinterpret_cast<StateFunc>(state) },
 
 #define END_STATE_MAP \
-    { reinterpret_cast<StateFunc>(NULL) }\
+    { reinterpret_cast<StateFunc>((StateFunc)NULL) }\
         }; \
-    return StateMap[0]; }
+    return &StateMap[0]; }
 
 #define BEGIN_TRANSITION_MAP \
     static const unsigned char TRANSITIONS[] = {\

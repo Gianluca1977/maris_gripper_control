@@ -1,12 +1,5 @@
-/*
- * gripper_app.h
- *
- *  Created on: 21/feb/2012
- *      Author: robotics
- */
-
-#ifndef GRIPPER_APP_H_
-#define GRIPPER_APP_H_
+#ifndef CONTROLLER_H_
+#define CONTROLLER_H_
 
 //#define ROS_IF
 
@@ -22,6 +15,7 @@
 #include "supervisor.h"
 #include "controllerdata.h"
 #include "rt_thread.h"
+#include "motor_configurator.h"
 
 #include "wf.h"
 
@@ -110,14 +104,37 @@ private:
     void rt_thread_handler(void);
 };
 
-class CtrlHandler:  virtual public CanDriver, virtual public Gripper, virtual public ControllerData, virtual public Supervisor, virtual public TcpData, private rt_thread
+class CtrlHandler:  virtual public CanDriver, virtual public Gripper, virtual public ControllerData, virtual public Supervisor, virtual public TcpData, public StateMachine, private rt_thread
 {
 public:
-    CtrlHandler();
+    CtrlHandler();        
+
+    MotorConfigurator Configurator;
 
     WF::BinarySemaphore S1;
     WF::BinarySemaphore S2;
     WF::BinarySemaphore S3;
+
+    // state machine state functions
+    void ST_Start_Controller();
+    void ST_Wait_Configuration();
+    void ST_Running();
+
+    // state map to define state function order
+    BEGIN_STATE_MAP
+        STATE_MAP_ENTRY(&CtrlHandler::ST_Start_Controller)
+        STATE_MAP_ENTRY(&CtrlHandler::ST_Wait_Configuration)
+        STATE_MAP_ENTRY(&CtrlHandler::ST_Running)
+    END_STATE_MAP
+
+    // state enumeration order must match the order of state
+    // method entries in the state map
+    enum E_States {
+        ST_START_CONTROLLER = 0,
+        ST_WAIT_CONFIGURATION,
+        ST_RUNNING,
+        ST_MAX_STATES
+    };
 
 private:
     void rt_thread_handler(void);
@@ -140,6 +157,4 @@ public:
 
 };
 
-
-
-#endif /* GRIPPER_APP_H_ */
+#endif /* CONTROLLER_H_ */

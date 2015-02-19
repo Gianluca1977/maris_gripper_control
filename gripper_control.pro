@@ -17,7 +17,8 @@ SOURCES += \
     src/controller.cpp \
     src/can_driver.cpp \
     src/motor_simulator.cpp \
-    src/timer.cpp
+    src/timer.cpp \
+    src/motor_configurator.cpp
 
 HEADERS += \
     src/can_define.h \
@@ -35,5 +36,6 @@ HEADERS += \
     src/controller.h \
     src/can_driver.h \
     src/motor_simulator.h \
-    src/timer.h
+    src/timer.h \
+    src/motor_configurator.h
 

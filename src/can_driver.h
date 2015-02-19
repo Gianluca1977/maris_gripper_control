@@ -1,10 +1,3 @@
-/*
- * can_driver.h
- *
- *  Created on: Aug 2, 2012
- *      Author: lar
- */
-
 #ifndef CAN_DRIVER_H_
 #define CAN_DRIVER_H_
 

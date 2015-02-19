@@ -11,11 +11,12 @@
 
 #include <boost/algorithm/string.hpp>
 
-CtrlHandler::CtrlHandler() : Gripper(nodeIds)
+CtrlHandler::CtrlHandler() : Gripper(nodeIds), Configurator(Motors), StateMachine(ST_MAX_STATES)
 {
 #ifdef ROS_IF
 
-#endif
+#endif    
+
     if(sockTCP.active) TcpActive = true;
     else TcpActive = false;
 
@@ -34,6 +35,28 @@ CtrlHandler::CtrlHandler() : Gripper(nodeIds)
     }
 
     if_thread.Create(thread_func, this);
+}
+
+void CtrlHandler::ST_Start_Controller()
+{
+    Configurator.StartConfiguration(); // calling within ST_START_CONTROLLER, then transit to ST_WAIT_CONFIGURATION
+    InternalEvent(ST_WAIT_CONFIGURATION);
+}
+
+void CtrlHandler::ST_Wait_Configuration()
+{
+    Configurator.WaitTime.Update(); // calling within ST_WAIT_CONFIGURATION
+    if(Configurator.isConfigured())
+    {
+        if (armPresent == true) S2.Signal();//risvegliamo il braccio - torna a dare il sync
+        srv_mode = SRV_MODE_DO_NOTHING;
+        InternalEvent(ST_RUNNING);
+    }
+}
+
+void CtrlHandler::ST_Running()
+{
+
 }
 
 void CtrlHandler::rt_thread_handler()
@@ -81,6 +104,9 @@ void CtrlHandler::rt_thread_handler()
     if (armPresent == true) S2.Wait();
 
     /* main hard real time loop */
+
+    ExternalEvent(ST_START_CONTROLLER);
+
     while (if_task->Continue() && !GLOBALSTOP){
 
         //check if everyone are operative.
@@ -113,7 +139,10 @@ void CtrlHandler::rt_thread_handler()
             semRet = 1;
             if (armPresent == true) S1.GetValue(semRet); // check for arm init done
 
-            if ( semRet > 0){
+            if ( semRet > 0)
+            {
+
+                /*
                 if(initTime){
                     timeIni = llround(KAL::GetTime());
                     for(cnt = 0; cnt < dof; cnt++) Motors[cnt].init(initPhase);
@@ -264,6 +293,7 @@ void CtrlHandler::rt_thread_handler()
                 default:
                     break;
                 }
+                */
             }
             break;
 
@@ -297,6 +327,8 @@ void CtrlHandler::rt_thread_handler()
             srv_mode = SRV_MODE_DO_NOTHING;
             break;
         }//switch(srv_mode)
+
+
 
         semRet = WF_RV_OK;
         if (armPresent == true) semRet = S3.Wait_If(); //check for operative sem

@@ -9,7 +9,6 @@ struct TimerData : public EventData
     long long expire_time;
 };
 
-
 class Timer : public StateMachine
 {
     bool running;
@@ -24,9 +23,9 @@ class Timer : public StateMachine
 
     // state map to define state function order
     BEGIN_STATE_MAP
-        STATE_MAP_ENTRY(&ST_Idle)
-        STATE_MAP_ENTRY(&ST_Running)
-        STATE_MAP_ENTRY(&ST_Expired)
+        STATE_MAP_ENTRY(&Timer::ST_Idle)
+        STATE_MAP_ENTRY(&Timer::ST_Running)
+        STATE_MAP_ENTRY(&Timer::ST_Expired)
     END_STATE_MAP
 
     // state enumeration order must match the order of state
@@ -42,19 +41,22 @@ public:
     Timer();
     Timer(long long expire_time);
 
-    void update(void);
-
-    void expireCallback(void);
+    void Update(void);
 
     bool Start(void);
     bool Start(TimerData*);
+    bool Start(long long);
 
     void Stop(void);
     void Reset(void);
+    bool Restart(void);
 
     bool isRunning(void){return (currentState == ST_RUNNING);}
     bool isExpired(void){return (currentState == ST_EXPIRED);}
 
+    typedef void (Timer::*Callback)(void);
+
+    static Callback CallbackFunc;
 };
 
 #endif // TIMER_H

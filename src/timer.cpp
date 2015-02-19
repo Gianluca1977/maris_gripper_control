@@ -1,12 +1,14 @@
 #include "wf.h"
 #include "timer.h"
 
-Timer::Timer() : timeout(0), StateMachine(ST_MAX_STATES)
+Timer::Callback Timer::CallbackFunc;
+
+Timer::Timer() : timeout(0), StateMachine(Timer::ST_MAX_STATES)
 {
     Reset();
 }
 
-Timer::Timer(long long expire_time) : timeout(expire_time), StateMachine(ST_MAX_STATES)
+Timer::Timer(long long expire_time) : timeout(expire_time), StateMachine(Timer::ST_MAX_STATES)
 {
     Reset();
 }
@@ -18,11 +20,6 @@ void Timer::Update()
         TRANSITION_MAP_ENTRY (ST_RUNNING)  // ST_Running
         TRANSITION_MAP_ENTRY (ST_EXPIRED)  // ST_Expired
     END_TRANSITION_MAP(NULL)
-}
-
-void Timer::expireCallback()
-{
-
 }
 
 bool Timer::Start()
@@ -75,11 +72,17 @@ void Timer::ST_Running()
 {
     if((startTime + timeout - llround(KAL::GetTime())) <= 0){
         InternalEvent(ST_EXPIRED);
-        expireCallback();
+        (this->*Timer::CallbackFunc)();
     }
 }
 
 void Timer::ST_Expired()
 {
 
+}
+
+bool Timer::Restart()
+{
+    Reset();
+    return Start();
 }
