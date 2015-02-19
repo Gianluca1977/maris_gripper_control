@@ -1,5 +1,5 @@
 //============================================================================
-// Name        : gripper_control.cpp
+// Name        : controller.cpp
 // Author      : Gianluca Palli
 // Version     :
 // Copyright   : 
@@ -11,8 +11,31 @@
 
 #include <boost/algorithm/string.hpp>
 
-CtrlHandler::CtrlHandler() : Gripper(nodeIds), Configurator(Motors)//, StateMachine(CtrlHandler::ST_MAX_STATES)
+StateStruct CtrlHandler::StateMap[10];/*  =
 {
+    STATE_MAP_ENTRY(&CtrlHandler::ST_Start_Controller)
+    STATE_MAP_ENTRY(&CtrlHandler::ST_Wait_Configuration)
+    STATE_MAP_ENTRY(&CtrlHandler::ST_Running)
+    { reinterpret_cast<StateFunc>((StateFunc)NULL) }
+};*/
+
+CtrlHandler::CtrlHandler() : StateMachine(CtrlHandler::ST_MAX_STATES, "CtrlHandler"), Gripper(nodeIds), Configurator(Motors)
+{
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Calling Constructor of %p", this);
+
+
+    StateMap[0] = {reinterpret_cast<StateFunc>(&CtrlHandler::ST_Start_Controller)};
+    StateMap[1] = {reinterpret_cast<StateFunc>(&CtrlHandler::ST_Wait_Configuration)};
+    StateMap[2] = {reinterpret_cast<StateFunc>(&CtrlHandler::ST_Running)};
+    StateMap[3] = {reinterpret_cast<StateFunc>((StateFunc)NULL)};
+
+
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Address of configurator = %p %p %p", &Configurator, &(this->Configurator), StateMap[0]);
+
+    Configurator_addr = &Configurator;
+
+    ExternalEvent(ST_RUNNING);
+
 #ifdef ROS_IF
 
 #endif    
@@ -39,9 +62,10 @@ CtrlHandler::CtrlHandler() : Gripper(nodeIds), Configurator(Motors)//, StateMach
     if_thread.Create(thread_func, this);
 }
 
-/*
+
 void CtrlHandler::ST_Start_Controller()
 {
+    //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Calling Configurator.StartConfiguration() of %s %p %p from %p", this->Configurator.ST_name, &(this->Configurator), GetStateMap(), this);
     Configurator.StartConfiguration(); // calling within ST_START_CONTROLLER, then transit to ST_WAIT_CONFIGURATION
     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Configurator Started");
     InternalEvent(ST_WAIT_CONFIGURATION);
@@ -63,7 +87,6 @@ void CtrlHandler::ST_Running()
 {
     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller in Running state");
 }
-*/
 
 void CtrlHandler::rt_thread_handler()
 {
@@ -98,7 +121,7 @@ void CtrlHandler::rt_thread_handler()
         WF::Task::Exit();
     }
 
-    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "CtrlHandler Created");
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "CtrlHandler Created %s %p", ST_name, this);
 
     if_task->SetReadyUntilPostInit();
     if_task->WaitRunning();
@@ -112,8 +135,7 @@ void CtrlHandler::rt_thread_handler()
     if (armPresent == true) S2.Wait();
 
     /* main hard real time loop */
-
-    //ExternalEvent(ST_START_CONTROLLER);
+    ExternalEvent(ST_START_CONTROLLER);
 
     while (if_task->Continue() && !GLOBALSTOP){
 
@@ -607,8 +629,12 @@ void PubJointState::rt_thread_handler()
 
 /* ******************************** */
 // Gripper Class Contructor
-Controller::Controller() : Gripper(nodeIds)
+Controller::Controller() : Gripper(nodeIds)//, StateMachine(CtrlHandler::ST_MAX_STATES, "Controller")
 {
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "CONTROLLER", "Calling Constructor of %p", this);
+
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "CONTROLLER", "Address of configurator = %p %p", &Configurator, &(this->Configurator));
+
 }
 
 // Gripper Class Destructor

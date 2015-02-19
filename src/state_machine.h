@@ -9,8 +9,11 @@ struct StateStruct;
 class StateMachine
 {
 public:
-    StateMachine(int maxStates);
+    StateMachine(int maxStates, char* name);
     virtual ~StateMachine() {}
+
+    char* ST_name;
+
 protected:
     enum { EVENT_IGNORED = 0xFE, CANNOT_HAPPEN };
     unsigned char currentState;

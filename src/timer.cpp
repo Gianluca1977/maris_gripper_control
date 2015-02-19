@@ -3,14 +3,15 @@
 
 Timer::Callback Timer::CallbackFunc;
 
-Timer::Timer() : timeout(0), StateMachine(Timer::ST_MAX_STATES)
+Timer::Timer() : timeout(0), StateMachine(Timer::ST_MAX_STATES, "Timer")
 {
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "TIMER", "Calling Constructor 2 of %p", this);
     Reset();
 }
 
-Timer::Timer(long long expire_time) : timeout(expire_time), StateMachine(Timer::ST_MAX_STATES)
+Timer::Timer(long long expire_time) : timeout(expire_time), StateMachine(Timer::ST_MAX_STATES, "Timer")
 {
-    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "TIMER", "Calling Constructor");
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "TIMER", "Calling Constructor of %p", this);
     Reset();
 }
 
@@ -86,6 +87,7 @@ void Timer::ST_Expired()
 
 bool Timer::Restart()
 {
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "TIMER", "Calling Restart of %p", this);
     Reset();
     return Start();
 }

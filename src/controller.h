@@ -16,6 +16,7 @@
 #include "controllerdata.h"
 #include "rt_thread.h"
 #include "motor_configurator.h"
+#include "state_machine.h"
 
 #include "wf.h"
 
@@ -77,7 +78,7 @@
 // WF_TIME_ONE_NS
 #define CONTROLTASK_SAMPLETIME		(10 * WF_TIME_ONE_MS)
 #define PUBJTASK_SAMPLETIME     	(500 * WF_TIME_ONE_MS)
-#define INIT_PHASEDELAY             (100 * WF_TIME_ONE_MS) //(1 * WF_TIME_ONE_S)
+#define INIT_PHASEDELAY             (1 * WF_TIME_ONE_S)//(100 * WF_TIME_ONE_MS)
 #define HOME_TIMEOUT                (30 * WF_TIME_ONE_S)
 #define HOME_BLINDELAY              (3 * WF_TIME_ONE_S)
 
@@ -104,29 +105,34 @@ private:
     void rt_thread_handler(void);
 };
 
-class CtrlHandler:  virtual public CanDriver, virtual public Gripper, virtual public ControllerData, virtual public Supervisor, virtual public TcpData, private rt_thread //public StateMachine,
+class CtrlHandler:  virtual public CanDriver, virtual public Gripper, virtual public ControllerData, virtual public Supervisor, virtual public TcpData, private rt_thread,  protected StateMachine
 {
 public:
     CtrlHandler();        
 
     MotorConfigurator Configurator;
+    MotorConfigurator* Configurator_addr;
 
     WF::BinarySemaphore S1;
     WF::BinarySemaphore S2;
     WF::BinarySemaphore S3;
 
-    /*
+    static StateStruct StateMap[10];
+
     // state machine state functions
     void ST_Start_Controller();
     void ST_Wait_Configuration();
     void ST_Running();
 
     // state map to define state function order
+    const StateStruct* GetStateMap(){return (const StateStruct*) &StateMap[0];}
+    /*
     BEGIN_STATE_MAP
         STATE_MAP_ENTRY(&CtrlHandler::ST_Start_Controller)
         STATE_MAP_ENTRY(&CtrlHandler::ST_Wait_Configuration)
         STATE_MAP_ENTRY(&CtrlHandler::ST_Running)
     END_STATE_MAP
+    */
 
     // state enumeration order must match the order of state
     // method entries in the state map
@@ -136,7 +142,7 @@ public:
         ST_RUNNING,
         ST_MAX_STATES
     };
-*/
+
 private:
     void rt_thread_handler(void);
 };

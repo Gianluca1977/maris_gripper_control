@@ -27,6 +27,8 @@ void MotorConfigurator::timerExpired()
 
 void MotorConfigurator::StartConfiguration()
 {
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling Start Configuration of %s %p", ST_name, this);
+
     BEGIN_TRANSITION_MAP
         TRANSITION_MAP_ENTRY(ST_BOOTUP_DEV)
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)
@@ -65,39 +67,40 @@ void MotorConfigurator::Conf_StepUp()
     END_TRANSITION_MAP(NULL)
 }
 
-MotorConfigurator::MotorConfigurator(Motor (&motor)[NUM_MOT]) : StateMachine(MotorConfigurator::ST_MAX_STATES),  WaitTime(INIT_PHASEDELAY), Motors(motor)  
+MotorConfigurator::MotorConfigurator(Motor (&motor)[NUM_MOT]) : StateMachine(MotorConfigurator::ST_MAX_STATES, "MotorConfigurator"),  WaitTime(INIT_PHASEDELAY), GripperMotors(motor)
 {
-    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling Constructor");
-    WaitTime.CallbackFunc = reinterpret_cast<Timer::Callback>(&MotorConfigurator::timerExpired);        
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling Constructor of %p", this);
+    WaitTime.CallbackFunc = reinterpret_cast<Timer::Callback>(&MotorConfigurator::timerExpired);
     motor_index = 0;
     Configured = false;
+    ExternalEvent(ST_IDLE);
 }
 
 void MotorConfigurator::ST_Bootup_Dev()
 {
     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "In ST_Bootup_Dev");
     Configured = false;
-    EVALUATE_TRANSITION(!Motors[motor_index].BootUp, INIT_BOOTUP_DEV)
+    EVALUATE_TRANSITION(!GripperMotors[motor_index].BootUp, INIT_BOOTUP_DEV)
 }
 
 void MotorConfigurator::ST_Start_Dev()
 {
-     EVALUATE_TRANSITION((Motors[motor_index].State & STATUS_WORD_MASK) != SWITCH_ON_DISABLED, INIT_START_DEV)
+     EVALUATE_TRANSITION((GripperMotors[motor_index].State & STATUS_WORD_MASK) != SWITCH_ON_DISABLED, INIT_START_DEV)
 }
 
 void MotorConfigurator::ST_Shutdown_Dev()
 {
-    EVALUATE_TRANSITION((Motors[motor_index].State & STATUS_WORD_MASK) != READY_TO_SWITCH_ON, INIT_SHUTDOWN_DEV)
+    EVALUATE_TRANSITION((GripperMotors[motor_index].State & STATUS_WORD_MASK) != READY_TO_SWITCH_ON, INIT_SHUTDOWN_DEV)
 }
 
 void MotorConfigurator::ST_Switch_On_Dev()
 {
-    EVALUATE_TRANSITION((Motors[motor_index].State & STATUS_WORD_MASK) != SWITCHED_ON , INIT_SWITCH_ON_DEV)
+    EVALUATE_TRANSITION((GripperMotors[motor_index].State & STATUS_WORD_MASK) != SWITCHED_ON , INIT_SWITCH_ON_DEV)
 }
 
 void MotorConfigurator::ST_Enable_Op_Dev()
 {
-    EVALUATE_TRANSITION((Motors[motor_index].State & STATUS_WORD_MASK) != OPERATION_ENABLED, INIT_ENABLE_OP_DEV)
+    EVALUATE_TRANSITION((GripperMotors[motor_index].State & STATUS_WORD_MASK) != OPERATION_ENABLED, INIT_ENABLE_OP_DEV)
 }
 
 void MotorConfigurator::ST_Enabled()

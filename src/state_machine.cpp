@@ -1,12 +1,15 @@
 #include <assert.h>
 #include "state_machine.h"
+#include "wf.h"
 
-StateMachine::StateMachine(int maxStates) :
+StateMachine::StateMachine(int maxStates, char* name) :
     _maxStates(maxStates),
     currentState(0),
     _eventGenerated(false),
-    _pEventData(NULL)
-{
+    _pEventData(NULL),
+    ST_name(name)
+{    
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "STATE_MACHINE", "Created by %s %p with currentState = %d, _maxStates = %d", ST_name, this, currentState, _maxStates);
 }
 
 // generates an external event. called once per external event
@@ -46,13 +49,13 @@ void StateMachine::StateEngine(void)
     while (_eventGenerated) {
         pDataTemp = _pEventData;  // copy of event data pointer
         _pEventData = NULL;       // event data used up, reset ptr
-        _eventGenerated = false;  // event used up, reset flag
-
-        assert(currentState < _maxStates);
+        _eventGenerated = false;  // event used up, reset flag        
 
         // execute the state passing in event data, if any
         const StateStruct* pStateMap = GetStateMap();
-        (this->*pStateMap[currentState].pStateFunc)(pDataTemp);
+        KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "STATE_MACHINE", "Called by %s %p with currentState = %d, _maxStates = %d, pStateFunc = %p", ST_name, this, currentState, _maxStates, &pStateMap[currentState]);
+        if(&pStateMap[currentState] != (const StateStruct*) NULL) (this->*pStateMap[currentState].pStateFunc)(pDataTemp);
+        else  KAL::DebugConsole::Write(LOG_LEVEL_ERROR, "STATE_MACHINE", "Pointer to state %d function is NULL", currentState);
 
         // if event data was used, then delete it
         if (pDataTemp) {

@@ -1,10 +1,3 @@
-/*
-* TcpInterface.cpp
-*
-*  Created on: Sep 13, 2012
-*      Author: lar
-*/
-
 #include "tcp_interface.h"
 #include "interface_data.h"
 
