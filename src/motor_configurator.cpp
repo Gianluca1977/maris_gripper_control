@@ -65,15 +65,17 @@ void MotorConfigurator::Conf_StepUp()
     END_TRANSITION_MAP(NULL)
 }
 
-MotorConfigurator::MotorConfigurator(Motor (&motor)[NUM_MOT]) : StateMachine(MotorConfigurator::ST_MAX_STATES),  WaitTime(INIT_PHASEDELAY), Motors(motor)
+MotorConfigurator::MotorConfigurator(Motor (&motor)[NUM_MOT]) : StateMachine(MotorConfigurator::ST_MAX_STATES),  WaitTime(INIT_PHASEDELAY), Motors(motor)  
 {
-    WaitTime.CallbackFunc = reinterpret_cast<Timer::Callback>(&MotorConfigurator::timerExpired);
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling Constructor");
+    WaitTime.CallbackFunc = reinterpret_cast<Timer::Callback>(&MotorConfigurator::timerExpired);        
     motor_index = 0;
     Configured = false;
 }
 
 void MotorConfigurator::ST_Bootup_Dev()
 {
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "In ST_Bootup_Dev");
     Configured = false;
     EVALUATE_TRANSITION(!Motors[motor_index].BootUp, INIT_BOOTUP_DEV)
 }

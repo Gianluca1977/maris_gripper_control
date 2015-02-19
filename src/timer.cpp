@@ -10,6 +10,7 @@ Timer::Timer() : timeout(0), StateMachine(Timer::ST_MAX_STATES)
 
 Timer::Timer(long long expire_time) : timeout(expire_time), StateMachine(Timer::ST_MAX_STATES)
 {
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "TIMER", "Calling Constructor");
     Reset();
 }
 
@@ -44,6 +45,8 @@ bool Timer::Start(long long expire_time)
         TRANSITION_MAP_ENTRY (EVENT_IGNORED)      // ST_Running
         TRANSITION_MAP_ENTRY (EVENT_IGNORED)      // ST_Expired
     END_TRANSITION_MAP(NULL)
+
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "TIMER", "Timer Started");
 
     return true;
 }

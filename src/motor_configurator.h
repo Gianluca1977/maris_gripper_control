@@ -15,7 +15,7 @@
         if(condition)\
         {\
             Motors[motor_index].init(initphase);\
-            WaitTime.Restart();\
+            if(!WaitTime.Restart()) KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "TIMER", "Error restarting timer");\
         }\
         else\
         {\
@@ -33,7 +33,7 @@
     else\
     {\
         Motors[motor_index].init(initphase);\
-        WaitTime.Restart();\
+        if(!WaitTime.Restart()) KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "TIMER", "Error restarting timer");\
         motor_index++;\
     }\
 

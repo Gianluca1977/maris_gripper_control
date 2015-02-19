@@ -104,7 +104,7 @@ private:
     void rt_thread_handler(void);
 };
 
-class CtrlHandler:  virtual public CanDriver, virtual public Gripper, virtual public ControllerData, virtual public Supervisor, virtual public TcpData, public StateMachine, private rt_thread
+class CtrlHandler:  virtual public CanDriver, virtual public Gripper, virtual public ControllerData, virtual public Supervisor, virtual public TcpData, private rt_thread //public StateMachine,
 {
 public:
     CtrlHandler();        
@@ -115,6 +115,7 @@ public:
     WF::BinarySemaphore S2;
     WF::BinarySemaphore S3;
 
+    /*
     // state machine state functions
     void ST_Start_Controller();
     void ST_Wait_Configuration();
@@ -135,7 +136,7 @@ public:
         ST_RUNNING,
         ST_MAX_STATES
     };
-
+*/
 private:
     void rt_thread_handler(void);
 };

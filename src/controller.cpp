@@ -11,11 +11,12 @@
 
 #include <boost/algorithm/string.hpp>
 
-CtrlHandler::CtrlHandler() : Gripper(nodeIds), Configurator(Motors), StateMachine(ST_MAX_STATES)
+CtrlHandler::CtrlHandler() : Gripper(nodeIds), Configurator(Motors)//, StateMachine(CtrlHandler::ST_MAX_STATES)
 {
 #ifdef ROS_IF
 
 #endif    
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Calling Constructor");\
 
     if(sockTCP.active) TcpActive = true;
     else TcpActive = false;
@@ -34,9 +35,11 @@ CtrlHandler::CtrlHandler() : Gripper(nodeIds), Configurator(Motors), StateMachin
         }
     }
 
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Calling thread_func");\
     if_thread.Create(thread_func, this);
 }
 
+/*
 void CtrlHandler::ST_Start_Controller()
 {
     Configurator.StartConfiguration(); // calling within ST_START_CONTROLLER, then transit to ST_WAIT_CONFIGURATION
@@ -60,6 +63,7 @@ void CtrlHandler::ST_Running()
 {
     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller in Running state");
 }
+*/
 
 void CtrlHandler::rt_thread_handler()
 {
@@ -74,6 +78,8 @@ void CtrlHandler::rt_thread_handler()
     int ret = 0;
 
     unsigned int cnt = 0;
+
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "within rt_thread_handler");\
 
     std::vector<int> auxNode;
 
@@ -107,7 +113,7 @@ void CtrlHandler::rt_thread_handler()
 
     /* main hard real time loop */
 
-    ExternalEvent(ST_START_CONTROLLER);
+    //ExternalEvent(ST_START_CONTROLLER);
 
     while (if_task->Continue() && !GLOBALSTOP){
 
@@ -143,7 +149,7 @@ void CtrlHandler::rt_thread_handler()
 
             if ( semRet > 0)
             {
-                ExternalEvent(ST_WAIT_CONFIGURATION);
+                //ExternalEvent(ST_WAIT_CONFIGURATION);
                 /*
                 if(initTime){
                     timeIni = llround(KAL::GetTime());
