@@ -40,6 +40,7 @@ CtrlHandler::CtrlHandler() : Gripper(nodeIds), Configurator(Motors), StateMachin
 void CtrlHandler::ST_Start_Controller()
 {
     Configurator.StartConfiguration(); // calling within ST_START_CONTROLLER, then transit to ST_WAIT_CONFIGURATION
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Configurator Started");
     InternalEvent(ST_WAIT_CONFIGURATION);
 }
 
@@ -48,6 +49,7 @@ void CtrlHandler::ST_Wait_Configuration()
     Configurator.WaitTime.Update(); // calling within ST_WAIT_CONFIGURATION
     if(Configurator.isConfigured())
     {
+        KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Motors are Configured");
         if (armPresent == true) S2.Signal();//risvegliamo il braccio - torna a dare il sync
         srv_mode = SRV_MODE_DO_NOTHING;
         InternalEvent(ST_RUNNING);
@@ -56,7 +58,7 @@ void CtrlHandler::ST_Wait_Configuration()
 
 void CtrlHandler::ST_Running()
 {
-
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller in Running state");
 }
 
 void CtrlHandler::rt_thread_handler()
@@ -141,7 +143,7 @@ void CtrlHandler::rt_thread_handler()
 
             if ( semRet > 0)
             {
-
+                ExternalEvent(ST_WAIT_CONFIGURATION);
                 /*
                 if(initTime){
                     timeIni = llround(KAL::GetTime());
