@@ -53,7 +53,9 @@ void StateMachine::StateEngine(void)
 
         // execute the state passing in event data, if any
         const StateStruct* pStateMap = GetStateMap();
+#ifdef _DEBUG_
         KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "STATE_MACHINE", "Called by %s %p with currentState = %d, _maxStates = %d, pStateFunc = %p", ST_name, this, currentState, _maxStates, &pStateMap[currentState]);
+#endif
         if(&pStateMap[currentState] != (const StateStruct*) NULL) (this->*pStateMap[currentState].pStateFunc)(pDataTemp);
         else  KAL::DebugConsole::Write(LOG_LEVEL_ERROR, "STATE_MACHINE", "Pointer to state %d function is NULL", currentState);
 

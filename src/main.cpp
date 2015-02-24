@@ -62,14 +62,14 @@ int main(int argc, char** argv)
 
     Controller gripper_control;
 
-    maintask->GotoHard();
-
     ret = maintask->WaitRunning();
     if (ret != WF_RV_OK){
         KAL::DebugConsole::Write(LOG_LEVEL_ERROR, MAINTASK_NAME, "WaitRunning fallita. (valore ritorno %d)", ret);
         main_shutdown();
         return WF_RV_FAIL;
     }
+
+    maintask->GotoHard();
 
     int canRet;
 

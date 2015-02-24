@@ -8,7 +8,7 @@ class Gripper : virtual public ControllerData
 {
 public:
 
-    Motor Motors[NUM_MOT];
+    static Motor Motors[NUM_MOT];
 
     //Gripper();
     Gripper(int []);
@@ -34,8 +34,8 @@ protected:
     void saveMaxLimit(int nodeId = -1, long pos = 0);
     double roundToSignificant(double num, int significant);
 
-    int jointReduction;
-    int safeJointOffset;
+    static int jointReduction;
+    static int safeJointOffset;
 };
 
 #endif // GRIPPER_H

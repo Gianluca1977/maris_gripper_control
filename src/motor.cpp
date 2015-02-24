@@ -14,7 +14,7 @@ Motor::Motor()
     Position = ERR_VAL;
     Velocity = ERR_VAL;
     MaxPosGrad = ERR_VAL;
-    BootUp = false;
+    BootUp = true;
     State = STATE_NONE;
 
     //std::cout << "Motor ID = " << ID << std::endl;

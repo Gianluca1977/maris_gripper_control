@@ -7,6 +7,24 @@
 
 using namespace libconfig;
 
+int ControllerData::srv_mode;
+bool ControllerData::armPresent;
+bool ControllerData::TcpActive;
+int ControllerData::nodeIds[NUM_MOT];
+
+ControllerData::sockTCP_t ControllerData::sockTCP;
+ControllerData::homeConfig_t ControllerData::homeConfig;
+ControllerData::operConfig_t ControllerData::operConfig;
+
+int ControllerData::finger_conf_num;
+double ControllerData::finger_confs[MAX_CONF][NUM_MOT];
+
+bool ControllerData::doHome;
+bool ControllerData::fault;
+bool ControllerData::tcpDoHome;
+bool ControllerData::tcpIsHomeDone;
+bool ControllerData::emerg_stop;
+
 ControllerData::ControllerData()
 {
     bool lookup = true;
@@ -100,19 +118,21 @@ ControllerData::ControllerData()
     }
 
     //printf("new\n\n");
+    /*
     action_done = false;
     action_free = false;	//control the GraspActionInterface->executeGrasp main while
     action_perc_complete = 0;
+    */
     emerg_stop = false;
-    isHomeDone = false;
+    //isHomeDone = false;
     doHome = false;
     srv_mode = 0;
-    action_force = 0;
-    auxInternalCall = -1;
+    //action_force = 0;
+    //auxInternalCall = -1;
     fault = false;
     tcpDoHome = false;
     tcpIsHomeDone = false;
-    setTactOffset = false;
+    //setTactOffset = false;
 
     //return lookup;
 }

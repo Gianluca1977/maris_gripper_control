@@ -41,6 +41,8 @@ public:
     Timer();
     Timer(long long expire_time);
 
+    void Init(long long expire_time);
+
     void Update(void);
 
     bool Start(void);
@@ -54,9 +56,10 @@ public:
     bool isRunning(void){return (currentState == ST_RUNNING);}
     bool isExpired(void){return (currentState == ST_EXPIRED);}
 
-    typedef void (Timer::*Callback)(void);
+    //typedef void (Timer::*Callback)(void);
+    //static Callback CallbackFunc;
 
-    static Callback CallbackFunc;
+    //virtual void timerExpired() = 0;
 };
 
 #endif // TIMER_H

@@ -10,67 +10,76 @@ public:
 
     ControllerData();
 
-    int nodeIds[NUM_MOT];
+    static int nodeIds[NUM_MOT];
 
-    bool armPresent;
+    static bool armPresent;
 
-    struct{
+    static struct sockTCP_t
+    {
         bool active;
         int port;
-    }sockTCP;
+    } sockTCP;
 
-    struct{
+    static struct homeConfig_t
+    {
         int safe_curr_limit;
         int peak_curr;
         int cont_curr;
         int max_speed;
-    }homeConfig;
+    } homeConfig;
 
-    struct{
+    static struct operConfig_t
+    {
         int safe_curr_limit;
         int peak_curr;
         int cont_curr;
         int max_speed;
         int max_acc;
         int max_deacc;
-    }operConfig;
+    } operConfig;
 
-    int finger_conf_num;
-    double finger_confs[MAX_CONF][NUM_MOT];
+    static int finger_conf_num;
+    static double finger_confs[MAX_CONF][NUM_MOT];
 
-    bool TcpActive;
+    static bool TcpActive;
 
+    /*
     unsigned int DOF_;
     unsigned int nfingers;
     bool isHomeDone;
+    */
 
-    bool doHome;
-    int auxInternalCall;
-    bool fault;
-    bool tcpDoHome;
-    bool tcpIsHomeDone;
-    bool setTactOffset;
+    static bool doHome;
+    //int auxInternalCall;
+    static bool fault;
+    static bool tcpDoHome;
+    static bool tcpIsHomeDone;
+    //bool setTactOffset;
 
     /********   RosInterface Stuffs  ********/
 #ifdef ROS_IF
 
 #endif
     // --- input variables from the RosInterface  --- //
-    int srv_preshape;
+    /*
+     * int srv_preshape;
     double srv_radius;
     double	srv_radius_palm;
     float action_force;
     int action_goal;
-    int srv_mode;
-    bool emerg_stop;
+    */
+    static bool emerg_stop;
+
+    static int srv_mode;
 
     // --- Output variables to the RosInterface  --- //
+    /*
     double action_perc_complete;
     bool action_done;
     bool action_free;
 
     int fingerOffset;
-
+    */
     /*****************************************/
 };
 

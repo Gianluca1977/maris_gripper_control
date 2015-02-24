@@ -17,8 +17,11 @@
 #include "rt_thread.h"
 #include "motor_configurator.h"
 #include "state_machine.h"
+#include "timer.h"
 
 #include "wf.h"
+
+//#include "thread"
 
 // ROS msg 
 //#include <sensor_msgs/JointState.h>
@@ -78,7 +81,7 @@
 // WF_TIME_ONE_NS
 #define CONTROLTASK_SAMPLETIME		(10 * WF_TIME_ONE_MS)
 #define PUBJTASK_SAMPLETIME     	(500 * WF_TIME_ONE_MS)
-#define INIT_PHASEDELAY             (1 * WF_TIME_ONE_S)//(100 * WF_TIME_ONE_MS)
+#define INIT_PHASEDELAY             (100 * WF_TIME_ONE_MS)//(1 * WF_TIME_ONE_S)//
 #define HOME_TIMEOUT                (30 * WF_TIME_ONE_S)
 #define HOME_BLINDELAY              (3 * WF_TIME_ONE_S)
 
@@ -105,34 +108,44 @@ private:
     void rt_thread_handler(void);
 };
 
-class CtrlHandler:  virtual public CanDriver, virtual public Gripper, virtual public ControllerData, virtual public Supervisor, virtual public TcpData, private rt_thread,  protected StateMachine
+class CtrlHandler:  virtual public CanDriver, virtual public Gripper, virtual public ControllerData, virtual public Supervisor, virtual public TcpData, public StateMachine//, private rt_thread
 {
 public:
-    CtrlHandler();        
+    CtrlHandler();
+    ~CtrlHandler();
 
-    MotorConfigurator Configurator;
-    MotorConfigurator* Configurator_addr;
+    static WF::Thread if_thread;
+    static WF::Task *if_task;
+    static void* returnValue;
 
-    WF::BinarySemaphore S1;
-    WF::BinarySemaphore S2;
-    WF::BinarySemaphore S3;
+    static MotorConfigurator Configurator;
+    static Timer WaitTimer;
 
-    static StateStruct StateMap[10];
+    static WF::BinarySemaphore S1;
+    static WF::BinarySemaphore S2;
+    static WF::BinarySemaphore S3;
+
+    //static StateStruct StateMap[10];
 
     // state machine state functions
     void ST_Start_Controller();
     void ST_Wait_Configuration();
     void ST_Running();
+    void ST_Emergency();
+
+    void Start();
+    void Update();
+    void Recover();
 
     // state map to define state function order
-    const StateStruct* GetStateMap(){return (const StateStruct*) &StateMap[0];}
-    /*
+    //const StateStruct* GetStateMap(){return (const StateStruct*) &StateMap[0];}
+
     BEGIN_STATE_MAP
         STATE_MAP_ENTRY(&CtrlHandler::ST_Start_Controller)
         STATE_MAP_ENTRY(&CtrlHandler::ST_Wait_Configuration)
         STATE_MAP_ENTRY(&CtrlHandler::ST_Running)
+        STATE_MAP_ENTRY(&CtrlHandler::ST_Emergency)
     END_STATE_MAP
-    */
 
     // state enumeration order must match the order of state
     // method entries in the state map
@@ -140,11 +153,12 @@ public:
         ST_START_CONTROLLER = 0,
         ST_WAIT_CONFIGURATION,
         ST_RUNNING,
+        ST_EMERGENCY,
         ST_MAX_STATES
     };
 
 private:
-    void rt_thread_handler(void);
+    static void* rt_thread_handler(void*);
 };
 
 /* Gripper Controller Class */

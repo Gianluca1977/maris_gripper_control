@@ -2,6 +2,10 @@
 #include "controller.h"
 #include <iostream>
 
+Motor Gripper::Motors[NUM_MOT];
+int Gripper::jointReduction;
+int Gripper::safeJointOffset;
+
 /*
 Gripper::Gripper()
 {    
@@ -110,7 +114,7 @@ void Gripper::updateStates(TPCANMsg msg) {
                         KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Motor %d Operation Enabled.", Motors[i].ID);
                         break;
                     case FAULT_STATE:
-                        KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Motor %d Fault Detected. Reset Motors.", Motors[i].ID);
+                        KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Motor %d Fault Detected. Reset Motor.", Motors[i].ID);
                         break;
                     case QUICKSTOP:
                         break;

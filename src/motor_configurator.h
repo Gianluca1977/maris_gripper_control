@@ -14,8 +14,7 @@
     {\
         if(condition)\
         {\
-            GripperMotors[motor_index].init(initphase);\
-            if(!WaitTime.Restart()) KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "TIMER", "Error restarting timer");\
+            GripperMotors[motor_index].init(initphase);\            
         }\
         else\
         {\
@@ -32,8 +31,7 @@
     }\
     else\
     {\
-        GripperMotors[motor_index].init(initphase);\
-        if(!WaitTime.Restart()) KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "TIMER", "Error restarting timer");\
+        GripperMotors[motor_index].init(initphase);\        
         motor_index++;\
     }\
 
@@ -50,7 +48,7 @@ class MotorConfigurator : public StateMachine
 
     bool Configured;
 
-    Motor (&GripperMotors)[NUM_MOT];
+    Motor *GripperMotors;
 
     // state machine state functions
 
@@ -111,9 +109,13 @@ class MotorConfigurator : public StateMachine
 
 public:
 
-    Timer WaitTime;
+    //Timer WaitTime;
 
     MotorConfigurator(Motor (&motor)[NUM_MOT]);
+
+    MotorConfigurator();
+
+    void Init(Motor *motor){GripperMotors = motor;}
 
     void timerExpired(void);
     void StartConfiguration(void);

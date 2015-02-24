@@ -7,6 +7,8 @@
 
 void MotorConfigurator::timerExpired()
 {
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling timerExpired of %s %p", ST_name, this);
+
     BEGIN_TRANSITION_MAP
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)
         TRANSITION_MAP_ENTRY(ST_BOOTUP_DEV)
@@ -22,7 +24,7 @@ void MotorConfigurator::timerExpired()
         TRANSITION_MAP_ENTRY(ST_DONE)
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)
-    END_TRANSITION_MAP(NULL)
+    END_TRANSITION_MAP(NULL)            
 }
 
 void MotorConfigurator::StartConfiguration()
@@ -49,6 +51,8 @@ void MotorConfigurator::StartConfiguration()
 
 void MotorConfigurator::Conf_StepUp()
 {
+     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling Conf_StepUp() of %s %p", ST_name, this);
+
     BEGIN_TRANSITION_MAP
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)
         TRANSITION_MAP_ENTRY(ST_START_DEV)
@@ -67,13 +71,20 @@ void MotorConfigurator::Conf_StepUp()
     END_TRANSITION_MAP(NULL)
 }
 
-MotorConfigurator::MotorConfigurator(Motor (&motor)[NUM_MOT]) : StateMachine(MotorConfigurator::ST_MAX_STATES, "MotorConfigurator"),  WaitTime(INIT_PHASEDELAY), GripperMotors(motor)
+MotorConfigurator::MotorConfigurator() : StateMachine(MotorConfigurator::ST_MAX_STATES, "MotorConfigurator")
+{
+     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling default constructor of %p", this);
+     //WaitTime.CallbackFunc = reinterpret_cast<Timer::Callback>(&MotorConfigurator::timerExpired);
+     motor_index = 0;
+     Configured = false;
+}
+
+MotorConfigurator::MotorConfigurator(Motor (&motor)[NUM_MOT]) : StateMachine(MotorConfigurator::ST_MAX_STATES, "MotorConfigurator"), GripperMotors(motor)
 {
     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling Constructor of %p", this);
-    WaitTime.CallbackFunc = reinterpret_cast<Timer::Callback>(&MotorConfigurator::timerExpired);
+    //WaitTime.CallbackFunc = reinterpret_cast<Timer::Callback>(&MotorConfigurator::timerExpired);
     motor_index = 0;
     Configured = false;
-    ExternalEvent(ST_IDLE);
 }
 
 void MotorConfigurator::ST_Bootup_Dev()
@@ -154,4 +165,6 @@ void MotorConfigurator::ST_Idle()
 {
 
 }
+
+
 
