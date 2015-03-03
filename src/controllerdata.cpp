@@ -69,7 +69,7 @@ ControllerData::ControllerData()
         if(sockTCP.active) {
             printf("A server TCP will be created. Port: %d\n", sockTCP.port);
             //printf(" Addr: %s \n", sockTCP.addr.c_str());
-            std::cout << "sizeof(SystemRequest) = " <<  sizeof(SystemRequest) << std::endl;
+            std::cout << "sizeof(SystemRequest_2) = " <<  sizeof(SystemRequest_2) << std::endl;
             std::cout << "sizeof(SystemStatus) = " <<  sizeof(SystemStatus) << std::endl << std::endl;
         }
 

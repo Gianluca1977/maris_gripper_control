@@ -7,7 +7,7 @@
 
 void MotorConfigurator::timerExpired()
 {
-    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling timerExpired of %s %p", ST_name, this);
+    //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling timerExpired of %s %p", ST_name, this);
 
     BEGIN_TRANSITION_MAP
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)
@@ -51,7 +51,7 @@ void MotorConfigurator::StartConfiguration()
 
 void MotorConfigurator::Conf_StepUp()
 {
-     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling Conf_StepUp() of %s %p", ST_name, this);
+    // KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling Conf_StepUp() of %s %p", ST_name, this);
 
     BEGIN_TRANSITION_MAP
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)

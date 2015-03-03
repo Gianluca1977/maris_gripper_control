@@ -34,7 +34,7 @@
 class TcpData : virtual protected ControllerData
 {
 public:    
-    static SystemRequest Request;
+    static SystemRequest_2 Request;
     static SystemStatus Status;
 
     //TcpData(int portno){port = portno;};

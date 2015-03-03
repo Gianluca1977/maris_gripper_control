@@ -158,6 +158,10 @@ void Motor::init(int phase) {
     case INIT_ENABLED:
         send_cmd_to_node(CMD_OPENCAN_SET_FAULHABER_MODE, ID);
 
+        break;
+
+    case INIT_TRACE_CONF:
+        // setting trace CMD_OPENCAN_SET_TPDO3_TRACE_CONF
         setMaxVel(MaxVel);	//#Set standard max Speed
 
         setMaxAcc(MaxAcc);	//#Set standard max Acceleration
@@ -166,10 +170,7 @@ void Motor::init(int phase) {
 
         setMaxPeakCurr(MaxHomePeak); //#Set max Peak Current
         setMaxContCurr(MaxHomeCont); //#Set max Continuous Current
-        break;
 
-    case INIT_TRACE_CONF:
-        // setting trace CMD_OPENCAN_SET_TPDO3_TRACE_CONF
         send_cmd_to_node(CMD_OPENCAN_SET_TPDO3_TRACE_CONF, ID);
         break;
     case INIT_SYNC_CONF:
@@ -210,6 +211,8 @@ void Motor::stateUpdate(unsigned char data[])
     Operational = ((State & STATUS_WORD_MASK) == OPERATION_ENABLED);
     Fault = State & FAULT_STATE;
 }
+
+
 
 
 

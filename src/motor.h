@@ -72,7 +72,7 @@ public:
 
     void stateUpdate(unsigned char data[]);
 
-    bool stateChanged(){return (State != Old_State);}
+    bool stateChanged(){return ((State & ~TARGET_MASK) == (Old_State & ~TARGET_MASK));}
 
     void setHomePosition();
     void setMaxAcc(long maxAcc = 1);

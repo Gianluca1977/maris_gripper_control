@@ -9,6 +9,7 @@
 #define INTERFACE_DATA_H_
 
 #include "controllerdata.h"
+#include "can_define.h"
 
 #define RAD_TO_GRAD			(180/M_PI)
 #define GRAD_TO_RAD			(M_PI/180)
@@ -67,22 +68,30 @@ typedef struct
 
 /* ****************************** */
 #define DO_NOTHING      0
-#define SET_POSITION    1
-#define SET_VELOCITY    2
+#define GO_POSITION     1
+#define GO_VELOCITY     2
 #define RECOVER         3
 #define SET_INIT_POS    4
 #define SET_FINAL_POS   5
 #define EMERGENCY       6
+#define GO_FINAL_POS    7
+#define PRESHAPE        8
 
 /* struct setting (user -> control) */
 typedef struct
 {
-    int command;
+    uint64_t command;
+    uint64_t preshape;
     union
     {
-        long long req_pos[NUM_MOT];
-        long long req_vel[NUM_MOT];
+        int64_t req_pos[NUM_MOT];
+        int64_t req_vel[NUM_MOT];
+        bool motor_selection[NUM_MOT];
     };
+
+#ifdef ARCH_32BIT
+    //int fake_align[2];	//align with 64 bit grafic interface
+#endif
 } SystemRequest_2;
 
 typedef struct

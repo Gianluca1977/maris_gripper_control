@@ -23,14 +23,6 @@ WF::BinarySemaphore CtrlHandler::S1;
 WF::BinarySemaphore CtrlHandler::S2;
 WF::BinarySemaphore CtrlHandler::S3;
 
-/*StateStruct CtrlHandler::StateMap[10];/* =
-{
-    STATE_MAP_ENTRY(&CtrlHandler::ST_Start_Controller)
-    STATE_MAP_ENTRY(&CtrlHandler::ST_Wait_Configuration)
-    STATE_MAP_ENTRY(&CtrlHandler::ST_Running)
-    { reinterpret_cast<StateFunc>((StateFunc)NULL) }
-};*/
-
 CtrlHandler::CtrlHandler() : StateMachine(CtrlHandler::ST_MAX_STATES, "CtrlHandler"), Gripper(nodeIds)//, Configurator(Motors)
 {
     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Calling Constructor of %p", this);
@@ -38,16 +30,7 @@ CtrlHandler::CtrlHandler() : StateMachine(CtrlHandler::ST_MAX_STATES, "CtrlHandl
     Configurator.Init(Motors);
     WaitTimer.Init(INIT_PHASEDELAY);
 
-    /*
-    StateMap[0] = {reinterpret_cast<StateFunc>(&CtrlHandler::ST_Start_Controller)};
-    StateMap[1] = {reinterpret_cast<StateFunc>(&CtrlHandler::ST_Wait_Configuration)};
-    StateMap[2] = {reinterpret_cast<StateFunc>(&CtrlHandler::ST_Running)};
-    StateMap[3] = {reinterpret_cast<StateFunc>((StateFunc)NULL)};
-    */
-
     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Address of configurator = %p", &Configurator);
-
-    //ExternalEvent(ST_RUNNING);
 
 #ifdef ROS_IF
 
@@ -119,8 +102,6 @@ void CtrlHandler::ST_Wait_Configuration()
 
 void CtrlHandler::ST_Running()
 {
-    bool start_moving = false;
-
     if(!isOperative() || !Configurator.isConfigured())
     {
         KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller in Emergency state");
@@ -139,97 +120,49 @@ void CtrlHandler::ST_Running()
             semRet = MsgSem.Wait_If();
             if(semRet == WF_RV_OK)
             {
-                if(Request.recover)
+                switch(Request.command)
                 {
-                    Request.recover = false;
+                case DO_NOTHING:
+                    break;
+                case RECOVER:
+                    Request.command = DO_NOTHING;
                     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller in driven in Emergency state by user request");
                     InternalEvent(ST_EMERGENCY);
                     return;
+                    break;
+                case EMERGENCY:
+                    Request.command = DO_NOTHING;
+                    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Emergency Request by the user");
+                    break;
+                case GO_POSITION:
+                    Request.command = DO_NOTHING;
+                    for(int i = 0; i < NUM_MOT; i++) Motors[i].movePosAbs(Request.req_pos[i]*jointReduction/360);
+                    break;
+                case GO_FINAL_POS:
+                    Request.command = DO_NOTHING;
+                    for(int i = 0; i < NUM_MOT; i++) if(Request.motor_selection[i]) Motors[i].movePosAbs(Motors[i].MaxPosGrad*jointReduction/360);
+                    break;
+                case GO_VELOCITY:
+                    Request.command = DO_NOTHING;
+                    for(int i = 0; i < NUM_MOT; i++) Motors[i].moveVel(Request.req_vel[i]);
+                    break;
+                case SET_INIT_POS:
+                    Request.command = DO_NOTHING;
+                    for(int i = 0; i < NUM_MOT; i++) if(Request.motor_selection[i]) Motors[i].setHomePosition();
+                    break;
+                case SET_FINAL_POS:
+                    Request.command = DO_NOTHING;
+                    for(int i = 0; i < NUM_MOT; i++) if(Request.motor_selection[i]) Motors[i].MaxPosGrad = Motors[i].PositionGrad;
+                    break;
+                case PRESHAPE:
+                    Request.command = DO_NOTHING;
+                    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Preshape request %d", Request.preshape);
+                    if(Request.preshape >= 0 && Request.preshape < finger_conf_num) for(int i = 0; i < NUM_MOT; i++) Motors[i].movePosAbs(finger_confs[Request.preshape][i]*jointReduction/360);
+                    else KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Preshape request out of range");
+                default:
+                    break;
                 }
 
-//                if(!Request.pos && !doHome && !tcpDoHome)	//pure velocity input
-//                {
-//                    for(unsigned int k = 0; k < NUM_MOT; k++)
-//                    {
-//                        //   data[k] = Request.req_vel[k];
-//                    }
-//                    //moveVel(data);
-//                }
-
-                //set home position button
-                if(Request.setIniPos){
-                    if(Request.butNum == 3){
-                        Motors[0].setHomePosition();
-                    }
-                    else if(Request.butNum == 4){
-                        Motors[1].setHomePosition();
-                    }
-                    else if(Request.butNum == 5){
-                        Motors[2].setHomePosition();
-                    }
-                }
-                //set max range button
-                else if(Request.setFinPos){
-                    if(Request.butNum == 6)
-                        Motors[0].MaxPosGrad = Motors[0].PositionGrad;
-                    if(Request.butNum == 7)
-                        Motors[1].MaxPosGrad = Motors[1].PositionGrad;
-                    if(Request.butNum == 8)
-                        Motors[2].MaxPosGrad = Motors[2].PositionGrad;
-                }
-                //position control button
-                if(Request.pos && !doHome && !tcpDoHome){
-                    if(Request.goIniPos){
-                        //for(unsigned int i=0;i<dof;i++) des_pos[i] = Motors[i].Position_grad;
-                        if(Request.butNum == 9){
-                            //des_pos[0] = 0;
-                            Motors[0].movePosAbs(0);
-                        }
-                        else if(Request.butNum == 10){
-                            //des_pos[1] = 0;
-                            Motors[1].movePosAbs(0);
-                        }
-                        else if(Request.butNum == 11){
-                            //des_pos[2] = 0;
-                            Motors[2].movePosAbs(0);
-                        }
-                        //loadPosAbs(des_pos);
-                        start_moving = true;
-
-                    } else if(Request.goFinPos){
-                        //for(unsigned int i=0;i<dof;i++) des_pos[i] = Motors[i].Position_grad;
-                        if(Request.butNum == 12){
-                            //des_pos[0] = Motors[0].max_range_grad;
-                            Motors[0].movePosAbs(Motors[0].MaxPosGrad*jointReduction/360);
-                        }
-                        else if(Request.butNum == 13){
-                            //des_pos[1] = Motors[1].max_range_grad;
-                            Motors[1].movePosAbs(Motors[1].MaxPosGrad*jointReduction/360);
-                        }
-                        else if(Request.butNum == 14){
-                            //des_pos[2] = Motors[2].max_range_grad;
-                            Motors[2].movePosAbs(Motors[2].MaxPosGrad*jointReduction/360);
-                        }
-                        //loadPosAbs(des_pos);
-                        start_moving = true;
-
-                    } else {
-                        int req_pose = Request.desired_conf;
-                        for(int i = 0; i < 3; i++) Motors[i].movePosAbs(Motors[i].MaxPosGrad*jointReduction/360);
-                    }
-
-                    //ret = calcPID(des_pos,data);
-                    //moveVel(data);
-
-                }//if pos
-
-                //if(tcp->request->doHome && start_moving) {
-                /*
-                if(start_moving) {
-                    for(unsigned i=0;i<3; i++) startMovePos();
-                    start_moving = false;
-                    KAL::DebugConsole::Write(LOG_LEVEL_INFO, CONTROLTASK_NAME, "Start Motion");
-                }*/
                 /*
                 semRet = MsgSem.Signal();
                 if(semRet != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, CONTROLTASK_NAME, "Error in MsgSem.Signal()");
@@ -283,9 +216,9 @@ void CtrlHandler::ST_Emergency()
             semRet = MsgSem.Wait_If();
             if(semRet == WF_RV_OK)
             {
-                if(Request.recover)
+                if(Request.command == RECOVER)
                 {
-                    Request.recover = false;
+                    Request.command = DO_NOTHING;
                     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller in driven in Emergency state by user request");
                     InternalEvent(ST_START_CONTROLLER);
                     return;
@@ -302,7 +235,7 @@ void CtrlHandler::Start()
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
-    END_TRANSITION_MAP(NULL)
+            END_TRANSITION_MAP(NULL)
 }
 
 void CtrlHandler::Update()
@@ -312,7 +245,7 @@ void CtrlHandler::Update()
             TRANSITION_MAP_ENTRY(ST_WAIT_CONFIGURATION)
             TRANSITION_MAP_ENTRY(ST_RUNNING)
             TRANSITION_MAP_ENTRY(ST_EMERGENCY)
-    END_TRANSITION_MAP(NULL)
+            END_TRANSITION_MAP(NULL)
 }
 
 void CtrlHandler::Recover()
@@ -322,7 +255,7 @@ void CtrlHandler::Recover()
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
             TRANSITION_MAP_ENTRY(ST_START_CONTROLLER)
-    END_TRANSITION_MAP(NULL)
+            END_TRANSITION_MAP(NULL)
 }
 
 void* CtrlHandler::rt_thread_handler(void *p)
@@ -526,22 +459,6 @@ void PubJointState::rt_thread_handler()
 
         /* ***************************  */
 
-        if(TcpActive){
-            emerg_stop = Request.emerg_stop;
-            Status.actCycle = 0;
-
-            if(Request.parking)
-                //srv_preshape = 5;
-
-            if(Request.doHome)
-                //tcpDoHome = true;
-                if(Request.manualHomeDone);
-                    //isHomeDone = true;
-            if(Request.highLevel);
-                //setTactOffset = true;
-        }
-        // if(tcp!=NULL) TcpActive = Request.tcpActive;
-
         //rosInter->pubJointStates(ros_msg);
         if_task->WaitPeriod();
     }
@@ -569,7 +486,7 @@ Controller::~Controller()
 {
     //delete this->rosInter;
     if(TcpActive){
-    }    
+    }
 
     //if_thread.Join();
     //DEBUG("%s thread joined\n",get_label());
