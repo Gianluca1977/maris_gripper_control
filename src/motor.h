@@ -67,6 +67,7 @@ public:
     void enable();
     void disable();
     void reset();
+    void clear();
     void init(int phase);
 
     void stateUpdate(unsigned char data[]);

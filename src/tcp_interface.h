@@ -33,8 +33,7 @@
 
 class TcpData : virtual protected ControllerData
 {
-public:
-    static volatile bool connected;
+public:    
     static SystemRequest Request;
     static SystemStatus Status;
 

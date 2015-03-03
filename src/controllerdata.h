@@ -1,6 +1,8 @@
 #ifndef CONTROLLERDATA_H
 #define CONTROLLERDATA_H
 
+#include "wf.h"
+
 #define MAX_CONF	6
 #define NUM_MOT     3
 
@@ -9,6 +11,8 @@ class ControllerData
 public:
 
     ControllerData();
+
+    static WF::Semaphore MsgSem;
 
     static int nodeIds[NUM_MOT];
 

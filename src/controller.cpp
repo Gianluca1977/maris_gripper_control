@@ -70,6 +70,12 @@ CtrlHandler::CtrlHandler() : StateMachine(CtrlHandler::ST_MAX_STATES, "CtrlHandl
         }
     }
 
+    ret = MsgSem.Create("MSGSEM", WF_SEMAPHORE_COUNTING, 0);
+    if (ret != WF_RV_OK){
+        KAL::DebugConsole::Write(LOG_LEVEL_ERROR, CONTROLTASK_NAME, "Unable to create MSGSEM");\
+    }
+
+
     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Calling thread_func");\
     //if_thread.Create(thread_func, this);
     if_thread.Create(rt_thread_handler, this);
@@ -117,110 +123,120 @@ void CtrlHandler::ST_Running()
 
     if(!isOperative() || !Configurator.isConfigured())
     {
-        InternalEvent(ST_EMERGENCY);
         KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller in Emergency state");
+        InternalEvent(ST_EMERGENCY);
         return;
     }
 
     int semRet = WF_RV_OK;
     if (armPresent == true) semRet = S3.Wait_If(); //check for operative sem
 
-    if(semRet == WF_RV_OK){
+    if(semRet == WF_RV_OK)
+    {
         /* *********** via TCP Using the grafic interface ***********/
-
         if(TcpActive)
         {
-            if(Request.recover){
-                //srv_mode = SRV_MODE_RECOVER;
-                //continue;
+            semRet = MsgSem.Wait_If();
+            if(semRet == WF_RV_OK)
+            {
+                if(Request.recover)
+                {
+                    Request.recover = false;
+                    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller in driven in Emergency state by user request");
+                    InternalEvent(ST_EMERGENCY);
+                    return;
+                }
+
+//                if(!Request.pos && !doHome && !tcpDoHome)	//pure velocity input
+//                {
+//                    for(unsigned int k = 0; k < NUM_MOT; k++)
+//                    {
+//                        //   data[k] = Request.req_vel[k];
+//                    }
+//                    //moveVel(data);
+//                }
+
+                //set home position button
+                if(Request.setIniPos){
+                    if(Request.butNum == 3){
+                        Motors[0].setHomePosition();
+                    }
+                    else if(Request.butNum == 4){
+                        Motors[1].setHomePosition();
+                    }
+                    else if(Request.butNum == 5){
+                        Motors[2].setHomePosition();
+                    }
+                }
+                //set max range button
+                else if(Request.setFinPos){
+                    if(Request.butNum == 6)
+                        Motors[0].MaxPosGrad = Motors[0].PositionGrad;
+                    if(Request.butNum == 7)
+                        Motors[1].MaxPosGrad = Motors[1].PositionGrad;
+                    if(Request.butNum == 8)
+                        Motors[2].MaxPosGrad = Motors[2].PositionGrad;
+                }
+                //position control button
+                if(Request.pos && !doHome && !tcpDoHome){
+                    if(Request.goIniPos){
+                        //for(unsigned int i=0;i<dof;i++) des_pos[i] = Motors[i].Position_grad;
+                        if(Request.butNum == 9){
+                            //des_pos[0] = 0;
+                            Motors[0].movePosAbs(0);
+                        }
+                        else if(Request.butNum == 10){
+                            //des_pos[1] = 0;
+                            Motors[1].movePosAbs(0);
+                        }
+                        else if(Request.butNum == 11){
+                            //des_pos[2] = 0;
+                            Motors[2].movePosAbs(0);
+                        }
+                        //loadPosAbs(des_pos);
+                        start_moving = true;
+
+                    } else if(Request.goFinPos){
+                        //for(unsigned int i=0;i<dof;i++) des_pos[i] = Motors[i].Position_grad;
+                        if(Request.butNum == 12){
+                            //des_pos[0] = Motors[0].max_range_grad;
+                            Motors[0].movePosAbs(Motors[0].MaxPosGrad*jointReduction/360);
+                        }
+                        else if(Request.butNum == 13){
+                            //des_pos[1] = Motors[1].max_range_grad;
+                            Motors[1].movePosAbs(Motors[1].MaxPosGrad*jointReduction/360);
+                        }
+                        else if(Request.butNum == 14){
+                            //des_pos[2] = Motors[2].max_range_grad;
+                            Motors[2].movePosAbs(Motors[2].MaxPosGrad*jointReduction/360);
+                        }
+                        //loadPosAbs(des_pos);
+                        start_moving = true;
+
+                    } else {
+                        int req_pose = Request.desired_conf;
+                        for(int i = 0; i < 3; i++) Motors[i].movePosAbs(Motors[i].MaxPosGrad*jointReduction/360);
+                    }
+
+                    //ret = calcPID(des_pos,data);
+                    //moveVel(data);
+
+                }//if pos
+
+                //if(tcp->request->doHome && start_moving) {
+                /*
+                if(start_moving) {
+                    for(unsigned i=0;i<3; i++) startMovePos();
+                    start_moving = false;
+                    KAL::DebugConsole::Write(LOG_LEVEL_INFO, CONTROLTASK_NAME, "Start Motion");
+                }*/
+                /*
+                semRet = MsgSem.Signal();
+                if(semRet != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, CONTROLTASK_NAME, "Error in MsgSem.Signal()");
+                */
             }
-
-            if(!Request.pos && !doHome && !tcpDoHome){	//pure velocity input
-                for(unsigned int k = 0; k < NUM_MOT; k++){
-                 //   data[k] = Request.req_vel[k];
-                }
-                //moveVel(data);
-            }
-            //set home position button
-            if(Request.setIniPos){
-                if(Request.butNum == 3){
-                    Motors[0].setHomePosition();
-                }
-                else if(Request.butNum == 4){
-                    Motors[1].setHomePosition();
-                }
-                else if(Request.butNum == 5){
-                    Motors[2].setHomePosition();
-                }
-            }
-            //set max range button
-            else if(Request.setFinPos){
-                if(Request.butNum == 6)
-                    Motors[0].MaxPosGrad = Motors[0].PositionGrad;
-                if(Request.butNum == 7)
-                    Motors[1].MaxPosGrad = Motors[1].PositionGrad;
-                if(Request.butNum == 8)
-                    Motors[2].MaxPosGrad = Motors[2].PositionGrad;
-            }
-            //position control button
-            if(Request.pos && !doHome && !tcpDoHome){
-                if(Request.goIniPos){
-                    //for(unsigned int i=0;i<dof;i++) des_pos[i] = Motors[i].Position_grad;
-                    if(Request.butNum == 9){
-                        //des_pos[0] = 0;
-                        Motors[0].movePosAbs(0);
-                    }
-                    else if(Request.butNum == 10){
-                        //des_pos[1] = 0;
-                        Motors[1].movePosAbs(0);
-                    }
-                    else if(Request.butNum == 11){
-                        //des_pos[2] = 0;
-                        Motors[2].movePosAbs(0);
-                    }
-                    //loadPosAbs(des_pos);
-                    start_moving = true;
-
-                } else if(Request.goFinPos){
-                    //for(unsigned int i=0;i<dof;i++) des_pos[i] = Motors[i].Position_grad;
-                    if(Request.butNum == 12){
-                        //des_pos[0] = Motors[0].max_range_grad;
-                        Motors[0].movePosAbs(Motors[0].MaxPosGrad*jointReduction/360);
-                    }
-                    else if(Request.butNum == 13){
-                        //des_pos[1] = Motors[1].max_range_grad;
-                        Motors[1].movePosAbs(Motors[1].MaxPosGrad*jointReduction/360);
-                    }
-                    else if(Request.butNum == 14){
-                        //des_pos[2] = Motors[2].max_range_grad;
-                        Motors[2].movePosAbs(Motors[2].MaxPosGrad*jointReduction/360);
-                    }
-                    //loadPosAbs(des_pos);
-                    start_moving = true;
-
-                } else {
-                    int req_pose = Request.desired_conf;
-                    for(int i = 0; i < 3; i++) Motors[i].movePosAbs(Motors[i].MaxPosGrad*jointReduction/360);
-                }
-
-                //ret = calcPID(des_pos,data);
-                //moveVel(data);
-
-            }//if pos
-
-            //if(tcp->request->doHome && start_moving) {
-            /*if(start_moving) {
-                for(unsigned i=0;i<3; i++) startMovePos();
-                start_moving = false;
-                KAL::DebugConsole::Write(LOG_LEVEL_INFO, CONTROLTASK_NAME, "Start Motion");
-
-            }*/
-
         }//if tcp
-
-
         /******** end of via TCP ******/
-
 
         /************* big control if using ROS interface*************/
         /*
@@ -256,7 +272,27 @@ void CtrlHandler::ST_Running()
 
 void CtrlHandler::ST_Emergency()
 {
+    int semRet = WF_RV_OK;
+    if (armPresent == true) semRet = S3.Wait_If(); //check for operative sem
 
+    if(semRet == WF_RV_OK)
+    {
+        /* *********** via TCP Using the grafic interface ***********/
+        if(TcpActive)
+        {
+            semRet = MsgSem.Wait_If();
+            if(semRet == WF_RV_OK)
+            {
+                if(Request.recover)
+                {
+                    Request.recover = false;
+                    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller in driven in Emergency state by user request");
+                    InternalEvent(ST_START_CONTROLLER);
+                    return;
+                }
+            }
+        }
+    }
 }
 
 void CtrlHandler::Start()
@@ -284,8 +320,8 @@ void CtrlHandler::Recover()
     BEGIN_TRANSITION_MAP
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
-            TRANSITION_MAP_ENTRY(ST_EMERGENCY)
-            TRANSITION_MAP_ENTRY(ST_EMERGENCY)
+            TRANSITION_MAP_ENTRY(EVENT_IGNORED)
+            TRANSITION_MAP_ENTRY(ST_START_CONTROLLER)
     END_TRANSITION_MAP(NULL)
 }
 

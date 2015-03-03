@@ -3,7 +3,7 @@
 
 extern bool GLOBALSTOP;
 
-volatile bool TcpData::connected = false;
+volatile bool TcpData::TcpActive = false;
 int TcpData::sockfd;
 int TcpData::newsockfd;
 
@@ -66,7 +66,7 @@ TcpSend::TcpSend()
 
 void TcpReceive::rt_thread_handler()
 {
-   /*
+    /*
     *  aggiornamento interfaccia grafica (grafic -> control)
     */
     int ret;
@@ -91,7 +91,7 @@ void TcpReceive::rt_thread_handler()
     {
         // ricevere commandi dalla interfaccia
 
-        if(!connected)
+        if(!TcpActive)
         {
             KAL::DebugConsole::Write(LOG_LEVEL_WARNING, TCPRECVTASK_NAME, "Waiting for incoming TCP connections");
 
@@ -128,16 +128,17 @@ void TcpReceive::rt_thread_handler()
                 error("ERROR ON ACCEPT");
             } else {
                 std::cout << "CONNECTION ACCEPT" << std::endl;
-                connected = true;
+                TcpActive = true;
             }
         }
 
-        if(connected){
+        if(TcpActive){
             KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TCPRECVTASK_NAME, "Waiting for incoming TCP data");
 
             ret = read(newsockfd,&Request,sizeof(SystemRequest));
 
             if(ret == sizeof(SystemRequest)){
+                //#ifdef _DEBUG_
                 KAL::DebugConsole::Write(LOG_LEVEL_INFO, TCPRECVTASK_NAME, "Dimensione Corretta %d",ret);
                 KAL::DebugConsole::Write(LOG_LEVEL_INFO, TCPRECVTASK_NAME, "req_vel = %lld %lld %lld",Request.req_vel[0],Request.req_vel[1],Request.req_vel[2]);
                 KAL::DebugConsole::Write(LOG_LEVEL_INFO, TCPRECVTASK_NAME, "req_pos = %lld %lld %lld",Request.req_pos[0],Request.req_pos[1],Request.req_pos[2]);
@@ -146,20 +147,28 @@ void TcpReceive::rt_thread_handler()
                 KAL::DebugConsole::Write(LOG_LEVEL_INFO, TCPRECVTASK_NAME, "emerg_stop = %d",Request.emerg_stop);
                 KAL::DebugConsole::Write(LOG_LEVEL_INFO, TCPRECVTASK_NAME, "manualHomeDone = %d",Request.manualHomeDone);
                 KAL::DebugConsole::Write(LOG_LEVEL_INFO, TCPRECVTASK_NAME, "tcpActive = %d",Request.tcpActive);
+                //#endif
+
+                ret = MsgSem.Signal();
+                if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPRECVTASK_NAME, "Error in MsgSem.Signal()");
             } else {
                 //KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPRECVTASK_NAME, "Dimensione NON Corretta %d",ret);
                 if(ret == 0) {
                     KAL::DebugConsole::Write(LOG_LEVEL_INFO, TCPRECVTASK_NAME, "EOF reached");
-                    connected = false;
+                    TcpActive = false;
                 } else if(ret<0) {
                     KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPRECVTASK_NAME, "read generated an error %d", ret);
-                    connected = false;
-
+                    TcpActive = false;
                 }
                 shutdown(newsockfd,2);
                 shutdown(sockfd,2);
                 close(newsockfd);
                 close(sockfd);
+            }
+
+            else
+            {
+                KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPRECVTASK_NAME, "Unable to lock MSGSEM");
             }
         }
     }
@@ -197,7 +206,7 @@ void TcpSend::rt_thread_handler()
 
     while (if_task->Continue() && !GLOBALSTOP){
         //inviare dati alla maixbox grafica
-        if(connected) n = write(newsockfd,&Status,sizeof(SystemStatus));
+        if(TcpActive) n = write(newsockfd,&Status,sizeof(SystemStatus));
         if_task->WaitPeriod();
 
     }

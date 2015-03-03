@@ -66,19 +66,37 @@ typedef struct
 } SystemStatus;
 
 /* ****************************** */
+#define DO_NOTHING      0
+#define SET_POSITION    1
+#define SET_VELOCITY    2
+#define RECOVER         3
+#define SET_INIT_POS    4
+#define SET_FINAL_POS   5
+#define EMERGENCY       6
 
 /* struct setting (user -> control) */
+typedef struct
+{
+    int command;
+    union
+    {
+        long long req_pos[NUM_MOT];
+        long long req_vel[NUM_MOT];
+    };
+} SystemRequest_2;
 
-typedef struct{
+typedef struct
+{
 
     long long req_vel[NUM_MOT];
     long long req_pos[NUM_MOT];
     long long conf_geom[3][2]; //riga - dito / colonna - info
-/*							  d  i
+
+    /*                  d  i
      * 0 - dito 1		conf_geom[0][0] = apert. dito 1
      * 1 - dito 2  		conf_geom[1][0] = apert. dito 2
      * 2 - dito 3		conf_geom[2][1] = offset fito 3
-     */
+     */    
     /*
      * ***   info
      * 0 - apertura (0 - 100)
@@ -97,9 +115,7 @@ typedef struct{
 
     bool highLevel;  // true - using high level / false - using low level
 
-
 /* *** tcp interface stuffs ***** */
-
 
     bool setIniPos;
     bool setFinPos;

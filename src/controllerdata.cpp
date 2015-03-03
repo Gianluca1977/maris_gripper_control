@@ -9,7 +9,7 @@ using namespace libconfig;
 
 int ControllerData::srv_mode;
 bool ControllerData::armPresent;
-bool ControllerData::TcpActive;
+bool ControllerData::TcpActive = false;
 int ControllerData::nodeIds[NUM_MOT];
 
 ControllerData::sockTCP_t ControllerData::sockTCP;
@@ -24,6 +24,8 @@ bool ControllerData::fault;
 bool ControllerData::tcpDoHome;
 bool ControllerData::tcpIsHomeDone;
 bool ControllerData::emerg_stop;
+
+WF::Semaphore ControllerData::MsgSem;
 
 ControllerData::ControllerData()
 {

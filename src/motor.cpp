@@ -6,17 +6,7 @@
 
 Motor::Motor()
 {
-    Control = 0;
-    Operational = false;
-    TargetReached = false;
-    Fault = false;
-    Old_State = STATE_NONE;
-    Position = ERR_VAL;
-    Velocity = ERR_VAL;
-    MaxPosGrad = ERR_VAL;
-    BootUp = true;
-    State = STATE_NONE;
-
+    clear();
     //std::cout << "Motor ID = " << ID << std::endl;
 }
 
@@ -60,6 +50,20 @@ void Motor::reset()
 {
     disable();
     enable();
+}
+
+void Motor::clear()
+{
+    Control = 0;
+    Operational = false;
+    TargetReached = false;
+    Fault = false;
+    Position = ERR_VAL;
+    Velocity = ERR_VAL;
+    MaxPosGrad = ERR_VAL;
+    BootUp = false;
+    State = STATE_NONE;
+    Old_State = STATE_NONE;
 }
 
 void Motor::queryAsyncVel()
