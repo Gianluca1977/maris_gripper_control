@@ -25,6 +25,15 @@ void Motor::setID(int id)
     //std::cout << "Motor ID = " << ID << std::endl;
 }
 
+void Motor::setLimits(long maxVel, long maxAcc, long maxDeacc, long maxPCurr, long maxCCurr)
+{
+    MaxVel = maxVel;
+    MaxAcc = maxAcc;
+    MaxDeacc = maxDeacc;
+    MaxPeakCurr = maxPCurr;
+    MaxContCurr = maxCCurr;
+}
+
 void Motor::stop()
 {
     send_faulhaber_cmd_to_node(FAULHABER_VELOCITY_CMD, 0, ID);
@@ -105,6 +114,7 @@ void Motor::setHomePosition()
 
 void Motor::setMaxVel(long maxVel)
 {
+    MaxVel = maxVel;
     send_faulhaber_cmd_to_node(FAULHABER_SET_MAX_SPEED, maxVel, ID);
 }
 
@@ -122,13 +132,13 @@ void Motor::setMaxDeacc(long maxDeacc)
 
 void Motor::setMaxPeakCurr(long maxPCurr)
 {
-    maxPCurr = maxPCurr;
+    MaxPeakCurr = maxPCurr;
     send_faulhaber_cmd_to_node(FAULHABER_SET_MAX_PEAK_CURR, maxPCurr, ID);
 }
 
 void Motor::setMaxContCurr(long maxCCurr)
 {
-    maxCCurr = maxCCurr;
+    MaxContCurr = maxCCurr;
     send_faulhaber_cmd_to_node(FAULHABER_SET_MAX_CONT_CURR, maxCCurr, ID);
 }
 
@@ -157,7 +167,6 @@ void Motor::init(int phase) {
 
     case INIT_ENABLED:
         send_cmd_to_node(CMD_OPENCAN_SET_FAULHABER_MODE, ID);
-
         break;
 
     case INIT_TRACE_CONF:
@@ -168,8 +177,8 @@ void Motor::init(int phase) {
 
         setMaxDeacc(MaxDeacc);	//#Set standard max Deceleration
 
-        setMaxPeakCurr(MaxHomePeak); //#Set max Peak Current
-        setMaxContCurr(MaxHomeCont); //#Set max Continuous Current
+        setMaxPeakCurr(MaxPeakCurr); //#Set max Peak Current
+        setMaxContCurr(MaxContCurr); //#Set max Continuous Current
 
         send_cmd_to_node(CMD_OPENCAN_SET_TPDO3_TRACE_CONF, ID);
         break;
@@ -184,7 +193,8 @@ void Motor::init(int phase) {
         break;
     case INIT_FAULHABER_CONF:
         //enable all
-        //for(unsigned int i=0; i < DOF_ ; i++) if(ID != 0) send_cmd_to_node(CMD_OPENCAN_SET_FAULHABER_ENABLE, ID);
+        //for(unsigned int i=0; i < DOF_ ; i++) if(ID != 0)
+        send_cmd_to_node(CMD_OPENCAN_SET_FAULHABER_ENABLE, ID);
         break;
     case INIT_FAULT:
         //device is in fault state CMD_OPENCAN_FAULTRESET

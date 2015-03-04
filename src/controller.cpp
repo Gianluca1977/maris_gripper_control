@@ -354,7 +354,7 @@ void* CtrlHandler::rt_thread_handler(void *p)
         current_ctrl->flush_msg_queue();
 
         /* send sync command */
-        if(!armPresent && current_ctrl->isOperative()){
+        if(!armPresent && current_ctrl->Configurator.isConfigured()){
             current_ctrl->send_sync_msg();
         }
 
@@ -437,7 +437,7 @@ void PubJointState::rt_thread_handler()
             /* aggiorna interfaccia tcp */
             if(TcpActive){
                 Status.Velocity[i] = Motors[i].Velocity;//auxDouble*3.35;
-                Status.PositionGrad[i] = Motors[i].Position;
+                Status.PositionGrad[i] = Motors[i].PositionGrad;
                 Status.Current[i] = Motors[i].Current;
                 Status.Control[i] = Motors[i].Control;
                 Status.MotorFault[i] = Motors[i].Fault;

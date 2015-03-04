@@ -16,7 +16,11 @@ Gripper::Gripper()
 
 Gripper::Gripper(int nodeIds[])
 {
-    for(int i = 0; i < NUM_MOT; i++) Motors[i].setID(nodeIds[i]);
+    for(int i = 0; i < NUM_MOT; i++)
+    {
+        Motors[i].setID(nodeIds[i]);
+        Motors[i].setLimits(operConfig.max_speed,operConfig.max_acc,operConfig.max_deacc,operConfig.peak_curr,operConfig.cont_curr);
+    }
 
     jointReduction = 3000 * 14 * 20 * 33 / 12;
     safeJointOffset = 10000;			//encoder pulse

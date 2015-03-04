@@ -178,7 +178,7 @@ void CanDriver::flush_msg_queue()
     /* send all commands in the msg_outqueue */
     while(!msg_outqueue.empty()){
         TPCANMsg* CANMsg = &(msg_outqueue.front());
-        KAL::DebugConsole::Write(LOG_LEVEL_INFO, "CANSampleMB", "Send CAN msg ID = %03X TYPE = %02X LEN = %d DATA = %02X %02X %02X %02X %02X %02X %02X %02X", CANMsg->ID, CANMsg->MSGTYPE, CANMsg->LEN, CANMsg->DATA[0], CANMsg->DATA[1], CANMsg->DATA[2], CANMsg->DATA[3], CANMsg->DATA[4], CANMsg->DATA[5], CANMsg->DATA[6], CANMsg->DATA[7]);
+        //KAL::DebugConsole::Write(LOG_LEVEL_INFO, "CANSampleMB", "Send CAN msg ID = %03X TYPE = %02X LEN = %d DATA = %02X %02X %02X %02X %02X %02X %02X %02X", CANMsg->ID, CANMsg->MSGTYPE, CANMsg->LEN, CANMsg->DATA[0], CANMsg->DATA[1], CANMsg->DATA[2], CANMsg->DATA[3], CANMsg->DATA[4], CANMsg->DATA[5], CANMsg->DATA[6], CANMsg->DATA[7]);
 #ifndef VM_TEST
         schedHelper_.Send(CANMsg, sizeof(TPCANMsg));
 #endif

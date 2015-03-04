@@ -26,8 +26,8 @@ public:
     //MotorData Data[NUM_MOT];
     int ID;
 
-    int MaxHomePeak;
-    int MaxHomeCont;
+    int MaxPeakCurr;
+    int MaxContCurr;
     int MaxVel;
     int MaxAcc;
     int MaxDeacc;
@@ -62,6 +62,7 @@ public:
     //MotorData &operator[](int idx) { return Data[idx]; }
 
     void setID(int id);
+    void setLimits(long maxVel = 500, long maxAcc = 1, long maxDeacc = 1, long maxPCurr = 3000, long maxCCurr = 1000);
     void stop();
     bool checkStopped();
     void enable();
@@ -72,7 +73,7 @@ public:
 
     void stateUpdate(unsigned char data[]);
 
-    bool stateChanged(){return ((State & ~TARGET_MASK) == (Old_State & ~TARGET_MASK));}
+    bool stateChanged(){return ((State & ~TARGET_MASK) != (Old_State & ~TARGET_MASK));}
 
     void setHomePosition();
     void setMaxAcc(long maxAcc = 1);

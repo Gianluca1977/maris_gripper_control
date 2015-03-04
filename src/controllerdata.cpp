@@ -62,6 +62,8 @@ ControllerData::ControllerData()
         conf_.lookupValue("operation-config.peak-curr", operConfig.peak_curr);
         conf_.lookupValue("operation-config.cont-curr", operConfig.cont_curr);
         conf_.lookupValue("operation-config.max-speed", operConfig.max_speed);
+        conf_.lookupValue("operation-config.max-acc", operConfig.max_acc);
+        conf_.lookupValue("operation-config.max-deacc", operConfig.max_deacc);
 
         if(armPresent) std::cout << "arm is present!" << std::endl;
         else std::cout << "arm is NOT present!" << std::endl;
@@ -83,6 +85,8 @@ ControllerData::ControllerData()
         std::cout << "safe-curr-limit: " << operConfig.safe_curr_limit << std::endl;
         std::cout << "peak-curr: " << operConfig.peak_curr << std::endl;
         std::cout << "cont-curr: " << operConfig.cont_curr << std::endl;
+        std::cout << "max-acc: " << operConfig.max_acc << std::endl;
+        std::cout << "max-deacc: " << operConfig.max_deacc << std::endl;
         std::cout << "max-speed: " << operConfig.max_speed << std::endl << std::endl;
 
         for(unsigned int i = 0; i < NUM_MOT; i++)
