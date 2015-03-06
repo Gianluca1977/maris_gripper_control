@@ -51,7 +51,7 @@ void MotorConfigurator::StartConfiguration()
 
 void MotorConfigurator::Conf_StepUp()
 {
-    // KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling Conf_StepUp() of %s %p", ST_name, this);
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling Conf_StepUp() of %s %p", ST_name, this);
 
     BEGIN_TRANSITION_MAP
         TRANSITION_MAP_ENTRY(EVENT_IGNORED)
@@ -90,13 +90,13 @@ MotorConfigurator::MotorConfigurator(Motor (&motor)[NUM_MOT]) : StateMachine(Mot
 void MotorConfigurator::ST_Bootup_Dev()
 {
     //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "In ST_Bootup_Dev");
-    Configured = false;
     EVALUATE_TRANSITION(!GripperMotors[motor_index].BootUp, INIT_BOOTUP_DEV)
 }
 
 void MotorConfigurator::ST_Start_Dev()
 {
-     EVALUATE_TRANSITION((GripperMotors[motor_index].State & STATUS_WORD_MASK) != SWITCH_ON_DISABLED, INIT_START_DEV)
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "In ST_Start_Dev");
+    EVALUATE_TRANSITION((GripperMotors[motor_index].State & STATUS_WORD_MASK) != SWITCH_ON_DISABLED, INIT_START_DEV)
 }
 
 void MotorConfigurator::ST_Shutdown_Dev()
@@ -145,14 +145,19 @@ void MotorConfigurator::ST_Done()
     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Done. We are ready to roll! ");
     Configured = true;
     //if (armPresent == true) S2.Signal();//risvegliamo il braccio - torna a dare il sync
-    InternalEvent(ST_IDLE);
+    //InternalEvent(ST_IDLE);
 }
 
 void MotorConfigurator::ST_Fault()
 {
     //fromFault = true;
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling ST_Fault of %p", this);
     Configured = false;
-    for(motor_index = 0; motor_index < NUM_MOT; motor_index++) GripperMotors[motor_index].init(INIT_FAULT);
+    for(motor_index = 0; motor_index < NUM_MOT; motor_index++)
+    {
+        GripperMotors[motor_index].clear();
+        GripperMotors[motor_index].init(INIT_FAULT);
+    }
     motor_index = 0;
     InternalEvent(ST_BOOTUP_DEV);
 }

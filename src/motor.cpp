@@ -41,7 +41,7 @@ void Motor::stop()
 
 void Motor::emergencyStop()
 {
-    send_cmd_to_node(CMD_OPENCAN_DISABLEOP,ID);
+    send_cmd_to_node(CMD_OPENCAN_DISABLE_VOLTAGE,ID);
     //send_NMT_to_node(CMD_OPENCAN_NMT_STOP, ID);
 }
 
@@ -65,6 +65,7 @@ void Motor::reset()
 {
     //disable();
     //enable();
+    clear();
     send_NMT_to_node(CMD_OPENCAN_NMT_RESET, ID);
 }
 
@@ -206,6 +207,7 @@ void Motor::init(int phase) {
     case INIT_FAULT:
         //device is in fault state CMD_OPENCAN_FAULTRESET
         send_cmd_to_node(CMD_OPENCAN_FAULTRESET, ID);
+        reset();
         break;
 
     case INIT_CLOSE:	//exit condition

@@ -126,7 +126,7 @@ void CtrlHandler::ST_Running()
                 case RECOVER:
                     Request.command = DO_NOTHING;
                     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller in driven in Emergency state by user request");
-                    for(int i = 0; i < NUM_MOT; i++) Motors[i].emergencyStop();
+                    for(int i = 0; i < NUM_MOT; i++) do Motors[i].emergencyStop(); while((Motors[i].State & STATUS_WORD_MASK) == SWITCH_ON_DISABLED);
                     InternalEvent(ST_EMERGENCY);
                     return;
                     break;
@@ -219,7 +219,7 @@ void CtrlHandler::ST_Emergency()
                 if(Request.command == RECOVER)
                 {
                     Request.command = DO_NOTHING;
-                    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller in driven in Emergency state by user request");
+                    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller driven in Emergency state by user request");
                     InternalEvent(ST_START_CONTROLLER);
                     return;
                 }
