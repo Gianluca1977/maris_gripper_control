@@ -39,6 +39,12 @@ void Motor::stop()
     send_faulhaber_cmd_to_node(FAULHABER_VELOCITY_CMD, 0, ID);
 }
 
+void Motor::emergencyStop()
+{
+    send_cmd_to_node(CMD_OPENCAN_DISABLEOP,ID);
+    //send_NMT_to_node(CMD_OPENCAN_NMT_STOP, ID);
+}
+
 bool Motor::checkStopped()
 {
     if(Velocity >= -1 && Velocity <=1 ) return true;
@@ -57,8 +63,9 @@ void Motor::enable()
 
 void Motor::reset()
 {
-    disable();
-    enable();
+    //disable();
+    //enable();
+    send_NMT_to_node(CMD_OPENCAN_NMT_RESET, ID);
 }
 
 void Motor::clear()

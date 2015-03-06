@@ -7,7 +7,6 @@
 
 using namespace libconfig;
 
-int ControllerData::srv_mode;
 bool ControllerData::armPresent;
 bool ControllerData::TcpActive = false;
 int ControllerData::nodeIds[NUM_MOT];

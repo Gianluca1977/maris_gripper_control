@@ -85,8 +85,7 @@ void CtrlHandler::ST_Wait_Configuration()
     if(Configurator.isConfigured())
     {
         KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Motors are Configured");
-        if (armPresent) S2.Signal();//risvegliamo il braccio - torna a dare il sync
-        srv_mode = SRV_MODE_DO_NOTHING;
+        if (armPresent) S2.Signal();//risvegliamo il braccio - torna a dare il sync        
         InternalEvent(ST_RUNNING);
         KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller in Running state");
     }
@@ -127,6 +126,7 @@ void CtrlHandler::ST_Running()
                 case RECOVER:
                     Request.command = DO_NOTHING;
                     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller in driven in Emergency state by user request");
+                    for(int i = 0; i < NUM_MOT; i++) Motors[i].emergencyStop();
                     InternalEvent(ST_EMERGENCY);
                     return;
                     break;
@@ -235,7 +235,7 @@ void CtrlHandler::Start()
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
-            END_TRANSITION_MAP(NULL)
+    END_TRANSITION_MAP(NULL)
 }
 
 void CtrlHandler::Update()
@@ -245,7 +245,7 @@ void CtrlHandler::Update()
             TRANSITION_MAP_ENTRY(ST_WAIT_CONFIGURATION)
             TRANSITION_MAP_ENTRY(ST_RUNNING)
             TRANSITION_MAP_ENTRY(ST_EMERGENCY)
-            END_TRANSITION_MAP(NULL)
+    END_TRANSITION_MAP(NULL)
 }
 
 void CtrlHandler::Recover()
@@ -255,7 +255,7 @@ void CtrlHandler::Recover()
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
             TRANSITION_MAP_ENTRY(ST_START_CONTROLLER)
-            END_TRANSITION_MAP(NULL)
+    END_TRANSITION_MAP(NULL)
 }
 
 void* CtrlHandler::rt_thread_handler(void *p)
@@ -287,10 +287,10 @@ void* CtrlHandler::rt_thread_handler(void *p)
     {
         KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Waiting for arm configuration and homing");
         S2.Wait();
-        KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Arm configuration and homing done. Start gripper configuration");
+        KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Arm configuration and homing done");
     }
-    else KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Start gripper configuration");
 
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Start gripper configuration");
 
     /* start controller state machine */
     current_ctrl->Start();
@@ -301,60 +301,18 @@ void* CtrlHandler::rt_thread_handler(void *p)
         semRet = 1;
         if (armPresent == true) S1.GetValue(semRet); // check for arm init done
 
+        /* update state machine */
         if ( semRet > 0)
         {
             current_ctrl->Update();
         }
 
-        switch(srv_mode){
-
-        case SRV_MODE_INIT_DEVICES: //init all devices
-
-            break;
-
-        case SRV_MODE_RECOVER:
-            //recover devices;
-            /*
-            for(cnt = 0; cnt < dof; cnt++) if(Motors[cnt].Fault)
-            {
-                initPhase = INIT_FAULT;
-                break;
-            }
-            srv_mode = SRV_MODE_INIT_DEVICES;
-            */
-            break;
-
-        case SRV_MODE_TACTILE_OFFSET:
-            //if(!setTactOffset) setTactOffset = true;
-            break;
-
-        case SRV_MODE_STOP:
-            /*
-            emerg_stop = false;
-            initPhase = INIT_BOOTUP_DEV;
-            action_free = true;
-            */
-            break;
-
-        case SRV_MODE_HOMING:
-            /*
-            doHome = true;
-            isHomeDone = false;
-            */
-            break;
-
-        case SRV_MODE_DO_NOTHING:
-        default:
-            srv_mode = SRV_MODE_DO_NOTHING;
-            break;
-        }//switch(srv_mode)
-
-
         /* send all commands in the msg_outqueue */
         current_ctrl->flush_msg_queue();
 
         /* send sync command */
-        if(!armPresent && current_ctrl->Configurator.isConfigured()){
+        if(!armPresent && current_ctrl->Configurator.isConfigured())
+        {
             current_ctrl->send_sync_msg();
         }
 
@@ -443,17 +401,8 @@ void PubJointState::rt_thread_handler()
                 Status.MotorFault[i] = Motors[i].Fault;
                 Status.MaxPosGrad[i] = Motors[i].MaxPosGrad;
                 Status.State[i] = Motors[i].State;
-                //Status.statusword_low[i] = Motors[i].statusword_low;
                 Status.Operational[i] = Motors[i].Operational;
-                /*
-                Status.homePhase = homePhase;
-                Status.initPhase = initPhase;
-                */
-                Status.srv_mode = srv_mode;
-                //Status.srv_preshape = srv_preshape;
-                //Status.isInitialized_ = ;
                 Status.emerg_stop = emerg_stop;
-                //Status.resetSensors = ;
             }
         }
 

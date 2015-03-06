@@ -152,6 +152,7 @@ void MotorConfigurator::ST_Fault()
 {
     //fromFault = true;
     Configured = false;
+    for(motor_index = 0; motor_index < NUM_MOT; motor_index++) GripperMotors[motor_index].init(INIT_FAULT);
     motor_index = 0;
     InternalEvent(ST_BOOTUP_DEV);
 }
