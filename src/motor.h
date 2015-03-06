@@ -64,6 +64,7 @@ public:
     void setID(int id);
     void setLimits(long maxVel = 500, long maxAcc = 1, long maxDeacc = 1, long maxPCurr = 3000, long maxCCurr = 1000);
     void stop();
+    void emergencyStop();
     bool checkStopped();
     void enable();
     void disable();

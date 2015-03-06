@@ -74,8 +74,6 @@ public:
     */
     static bool emerg_stop;
 
-    static int srv_mode;
-
     // --- Output variables to the RosInterface  --- //
     /*
     double action_perc_complete;

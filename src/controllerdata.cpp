@@ -131,7 +131,6 @@ ControllerData::ControllerData()
     emerg_stop = false;
     //isHomeDone = false;
     doHome = false;
-    srv_mode = 0;
     //action_force = 0;
     //auxInternalCall = -1;
     fault = false;
