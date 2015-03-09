@@ -1,14 +1,7 @@
-/*
- * RosInterface.h
- *
- *  Created on: 24/feb/2012
- *      Author: robotics
- */
-
 #ifndef ROSINTERFACE_H_
 #define ROSINTERFACE_H_
 
-#include "gripper_control.h"
+#include "gripper.h"
 #include "can_driver.h"
 
 // ROS includes

@@ -1,12 +1,4 @@
-/*
- * RosInterface.cpp
- *
- *  Created on: 24/feb/2012
- *      Author: robotics
- */
-
-#include "RosInterface.h"
-#include "gripper_app_WF.h"
+#include "ros_interface.h"
 
 //#define SIMULATION
 
