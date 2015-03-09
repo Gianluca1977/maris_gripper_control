@@ -81,6 +81,11 @@ void CtrlHandler::ST_Start_Controller()
 
 void CtrlHandler::ST_Wait_Configuration()
 {
+    if(!armPresent && Configurator.fromStop)
+    {
+        send_sync_msg();
+    }
+
     WaitTimer.Update(); // calling within ST_WAIT_CONFIGURATION
     if(Configurator.isConfigured())
     {
@@ -159,6 +164,16 @@ void CtrlHandler::ST_Running()
                     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Preshape request %d", Request.preshape);
                     if(Request.preshape >= 0 && Request.preshape < finger_conf_num) for(int i = 0; i < NUM_MOT; i++) Motors[i].movePosAbs(finger_confs[Request.preshape][i]*jointReduction/360);
                     else KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Preshape request out of range");
+                    break;
+                case STOP:
+                    Request.command = DO_NOTHING;
+                    //for(int i = 0; i < NUM_MOT; i++) Motors[i].disable();
+                    Configurator.Stop();
+                    break;
+                case RUN:
+                    Request.command = DO_NOTHING;
+                    //for(int i = 0; i < NUM_MOT; i++) Motors[i].enable();
+                    break;
                 default:
                     break;
                 }
@@ -216,12 +231,27 @@ void CtrlHandler::ST_Emergency()
             semRet = MsgSem.Wait_If();
             if(semRet == WF_RV_OK)
             {
-                if(Request.command == RECOVER)
+                switch(Request.command)
                 {
+                case RECOVER:
                     Request.command = DO_NOTHING;
+                    Configurator.fromStop = false;
                     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller driven in Emergency state by user request");
-                    InternalEvent(ST_START_CONTROLLER);
-                    return;
+                    InternalEvent(ST_START_CONTROLLER);                    
+                    break;
+                case STOP:
+                    Request.command = DO_NOTHING;
+                    //for(int i = 0; i < NUM_MOT; i++) Motors[i].disable();
+                    Configurator.Stop();
+                    break;
+                case RUN:
+                    Request.command = DO_NOTHING;
+                    //for(int i = 0; i < NUM_MOT; i++) Motors[i].enable();
+                    Configurator.Restart();
+                    InternalEvent(ST_WAIT_CONFIGURATION);
+                    break;
+                default:
+                    break;
                 }
             }
         }

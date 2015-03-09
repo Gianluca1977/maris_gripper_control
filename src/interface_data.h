@@ -76,6 +76,8 @@ typedef struct
 #define EMERGENCY       6
 #define GO_FINAL_POS    7
 #define PRESHAPE        8
+#define STOP            9
+#define RUN             10
 
 /* struct setting (user -> control) */
 typedef struct

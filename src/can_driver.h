@@ -41,7 +41,7 @@
 #define STATUS_WORD_MASK        0x00FF
 #define STATUS_WORD_ERR_MASK    0xFF00
 
-#define STATE_NONE		0x0000
+#define STATE_NONE      		0x0000
 #define SWITCH_ON_DISABLED      0x0060
 #define READY_TO_SWITCH_ON      0x0021
 #define SWITCHED_ON             0x0023

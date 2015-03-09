@@ -44,7 +44,7 @@ struct MotorConfiguratorData : public EventData
 class MotorConfigurator : public StateMachine
 {
 
-    int motor_index;
+    int motor_index;    
 
     bool Configured;
 
@@ -67,7 +67,7 @@ class MotorConfigurator : public StateMachine
     void ST_Faulhaber_Conf();
     void ST_Done();
     void ST_Fault();
-    void ST_Close();
+    void ST_Stop();
 
     // state map to define state function order
     BEGIN_STATE_MAP
@@ -84,7 +84,7 @@ class MotorConfigurator : public StateMachine
         STATE_MAP_ENTRY(&MotorConfigurator::ST_Faulhaber_Conf)
         STATE_MAP_ENTRY(&MotorConfigurator::ST_Done)
         STATE_MAP_ENTRY(&MotorConfigurator::ST_Fault)
-        STATE_MAP_ENTRY(&MotorConfigurator::ST_Close)
+        STATE_MAP_ENTRY(&MotorConfigurator::ST_Stop)
     END_STATE_MAP
 
     // state enumeration order must match the order of state
@@ -103,13 +103,15 @@ class MotorConfigurator : public StateMachine
         ST_FAULHABER_CONF,
         ST_DONE,
         ST_FAULT,
-        ST_CLOSE,
+        ST_STOP,
         ST_MAX_STATES
     };
 
 public:
 
     //Timer WaitTime;
+
+    bool fromStop;
 
     MotorConfigurator(Motor (&motor)[NUM_MOT]);
 
@@ -120,6 +122,8 @@ public:
     void timerExpired(void);
     void StartConfiguration(void);
     bool isConfigured(void){return Configured;}
+    void Stop(void);
+    void Restart(void);
 };
 
 #endif // MOTOR_CONFIGURATOR_H

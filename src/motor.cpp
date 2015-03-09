@@ -58,7 +58,9 @@ void Motor::disable()
 
 void Motor::enable()
 {
-    send_faulhaber_enable_to_node(ID);
+    send_cmd_to_node(CMD_OPENCAN_SWITCHON, ID);
+    send_cmd_to_node(CMD_OPENCAN_ENABLEOP, ID);
+    //send_faulhaber_enable_to_node(ID);
 }
 
 void Motor::reset()
