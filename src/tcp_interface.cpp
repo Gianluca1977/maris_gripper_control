@@ -130,9 +130,13 @@ void TcpReceive::rt_thread_handler()
         if(TcpActive){
             KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TCPRECVTASK_NAME, "Waiting for incoming TCP data");
 
+            ret = MsgSem.Wait();
+            if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPRECVTASK_NAME, "Error in MsgSem.Signal()");
+
             ret = read(newsockfd,&Request,sizeof(SystemRequest));
 
-            if(ret == sizeof(SystemRequest)){
+            if(ret == sizeof(SystemRequest))
+            {
                 //#ifdef _DEBUG_
                 KAL::DebugConsole::Write(LOG_LEVEL_INFO, TCPRECVTASK_NAME, "Command %d",Request.command);
                 KAL::DebugConsole::Write(LOG_LEVEL_INFO, TCPRECVTASK_NAME, "preshape %d",Request.preshape);
@@ -143,13 +147,12 @@ void TcpReceive::rt_thread_handler()
 //                KAL::DebugConsole::Write(LOG_LEVEL_INFO, TCPRECVTASK_NAME, "emerg_stop = %d",Request.emerg_stop);
 //                KAL::DebugConsole::Write(LOG_LEVEL_INFO, TCPRECVTASK_NAME, "manualHomeDone = %d",Request.manualHomeDone);
 //                KAL::DebugConsole::Write(LOG_LEVEL_INFO, TCPRECVTASK_NAME, "tcpActive = %d",Request.tcpActive);
-                //#endif
-
-                ret = MsgSem.Signal();
-                if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPRECVTASK_NAME, "Error in MsgSem.Signal()");
+                //#endif                
             }
             else
             {
+                Request.command = DO_NOTHING;
+
                 KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPRECVTASK_NAME, "Dimensione NON Corretta %d",ret);
                 TcpActive = false;
                 if(ret == 0)
@@ -166,6 +169,12 @@ void TcpReceive::rt_thread_handler()
                 close(newsockfd);
                 close(sockfd);
             }
+
+            ret = MsgSem.Signal();
+            if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPRECVTASK_NAME, "Error in MsgSem.Signal()");
+
+            ret = if_task->Sleep(100 * WF_TIME_ONE_MS);
+            if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPRECVTASK_NAME, "Error in if_task->Sleep()");
 
 //            else
 //            {

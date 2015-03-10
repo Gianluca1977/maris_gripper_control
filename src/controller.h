@@ -141,6 +141,7 @@ public:
 
 private:
     static void* rt_thread_handler(void*);
+    void resetCommand();
 };
 
 /* Gripper Controller Class */
@@ -148,7 +149,7 @@ class Controller : virtual public CtrlHandler, virtual public PubJointState, vir
 {
 public:
     Controller(int arg_c, char** arg_v, std::string node_Name);
-    ~Controller();
+    ~Controller();    
 
     void process_message();
     void process_message(TPCANMsg msg);

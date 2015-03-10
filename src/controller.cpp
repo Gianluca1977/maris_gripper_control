@@ -55,7 +55,7 @@ CtrlHandler::CtrlHandler() : StateMachine(CtrlHandler::ST_MAX_STATES), Gripper(n
         }
     }
 
-    ret = MsgSem.Create("MSGSEM", WF_SEMAPHORE_COUNTING, 0);
+    ret = MsgSem.Create("MSGSEM", 1);
     if (ret != WF_RV_OK){
         KAL::DebugConsole::Write(LOG_LEVEL_ERROR, CONTROLTASK_NAME, "Unable to create MSGSEM");\
     }
@@ -69,6 +69,7 @@ CtrlHandler::CtrlHandler() : StateMachine(CtrlHandler::ST_MAX_STATES), Gripper(n
 CtrlHandler::~CtrlHandler()
 {
     if_thread.Join();
+    MsgSem.Release();
     //DEBUG("%s thread joined\n",get_label());
 }
 
@@ -129,65 +130,62 @@ void CtrlHandler::ST_Running()
                 switch(Request.command)
                 {
                 case DO_NOTHING:
+                    resetCommand();
                     break;
                 case RECOVER:
-                    Request.command = DO_NOTHING;
+                    resetCommand();
                     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller in driven in Emergency state by user request");
                     for(int i = 0; i < NUM_MOT; i++) do Motors[i].emergencyStop(); while((Motors[i].State & STATUS_WORD_MASK) == SWITCH_ON_DISABLED);
                     InternalEvent(ST_EMERGENCY);
                     return;
                     break;
                 case EMERGENCY:
-                    Request.command = DO_NOTHING;
+                    resetCommand();
                     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Emergency Request by the user");
                     break;
                 case GO_POSITION:
-                    Request.command = DO_NOTHING;
+                    resetCommand();
                     for(int i = 0; i < NUM_MOT; i++) Motors[i].movePosAbs(Request.req_pos[i]*jointReduction/360);
                     break;
                 case GO_FINAL_POS:
-                    Request.command = DO_NOTHING;
+                    resetCommand();
                     for(int i = 0; i < NUM_MOT; i++) if(Request.motor_selection[i]) Motors[i].movePosAbs(Motors[i].MaxPosGrad*jointReduction/360);
                     break;
                 case GO_VELOCITY:
-                    Request.command = DO_NOTHING;
+                    resetCommand();
                     for(int i = 0; i < NUM_MOT; i++) Motors[i].moveVel(Request.req_vel[i]);
                     break;
                 case SET_INIT_POS:
-                    Request.command = DO_NOTHING;
+                    resetCommand();
                     for(int i = 0; i < NUM_MOT; i++) if(Request.motor_selection[i]) Motors[i].setHomePosition();
                     break;
                 case SET_FINAL_POS:
-                    Request.command = DO_NOTHING;
+                    resetCommand();
                     for(int i = 0; i < NUM_MOT; i++) if(Request.motor_selection[i]) Motors[i].MaxPosGrad = Motors[i].PositionGrad;
                     break;
                 case PRESHAPE:
-                    Request.command = DO_NOTHING;
+                    resetCommand();
                     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Preshape request %d", Request.preshape);
                     if(Request.preshape >= 0 && Request.preshape < finger_conf_num) for(int i = 0; i < NUM_MOT; i++) Motors[i].movePosAbs(finger_confs[Request.preshape][i]*jointReduction/360);
                     else KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Preshape request out of range");
                     break;
                 case STOP:
-                    Request.command = DO_NOTHING;
+                    resetCommand();
                     //for(int i = 0; i < NUM_MOT; i++) Motors[i].disable();
                     Configurator.Stop();
                     break;
                 case RUN:
-                    Request.command = DO_NOTHING;
+                    resetCommand();
                     //for(int i = 0; i < NUM_MOT; i++) Motors[i].enable();
                     break;
                 case SET_HOME:
-                    Request.command = DO_NOTHING;
+                    resetCommand();
                     for(int i = 0; i < NUM_MOT; i++) Motors[i].setHomePosition();
                     break;
                 default:
+                    resetCommand();
                     break;
                 }
-
-                /*
-                semRet = MsgSem.Signal();
-                if(semRet != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, CONTROLTASK_NAME, "Error in MsgSem.Signal()");
-                */
             }
         }//if tcp
         /******** end TCP Interface ******/
@@ -220,23 +218,24 @@ void CtrlHandler::ST_Emergency()
                 switch(Request.command)
                 {
                 case RECOVER:
-                    Request.command = DO_NOTHING;
+                    resetCommand();
                     Configurator.fromStop = false;
                     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller driven in Emergency state by user request");
                     InternalEvent(ST_START_CONTROLLER);
                     break;
                 case STOP:
-                    Request.command = DO_NOTHING;
+                    resetCommand();
                     //for(int i = 0; i < NUM_MOT; i++) Motors[i].disable();
                     Configurator.Stop();
                     break;
                 case RUN:
-                    Request.command = DO_NOTHING;
+                    resetCommand();
                     //for(int i = 0; i < NUM_MOT; i++) Motors[i].enable();
                     Configurator.Restart();
                     InternalEvent(ST_WAIT_CONFIGURATION);
                     break;
                 default:
+                    resetCommand();
                     break;
                 }
             }
@@ -272,6 +271,13 @@ void CtrlHandler::Recover()
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
             TRANSITION_MAP_ENTRY(ST_START_CONTROLLER)
             END_TRANSITION_MAP(NULL)
+}
+
+void CtrlHandler::resetCommand()
+{
+    Request.command = DO_NOTHING;
+    int semRet = MsgSem.Signal();
+    if(semRet != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, CONTROLTASK_NAME, "Error in MsgSem.Signal()");
 }
 
 void* CtrlHandler::rt_thread_handler(void *p)
