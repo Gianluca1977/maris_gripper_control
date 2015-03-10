@@ -1,3 +1,4 @@
+#include "main.h"
 #include "ros_interface.h"
 #include "interface_data.h"
 #include "tcp_interface.h"
@@ -11,6 +12,7 @@
 
 RosInterface::RosInterface(int argc, char** argv, std::string nodeName)
 {
+#ifdef ROS_IF
 	ros::init(argc,argv,nodeName.c_str());
 	ros::NodeHandle nh;
 
@@ -18,7 +20,8 @@ RosInterface::RosInterface(int argc, char** argv, std::string nodeName)
     ros_publisher_pos = nh.advertise<gripper_control::GripperJointPosition>("Gripper/JointPosition", 1);
     ros_publisher_vel = nh.advertise<gripper_control::GripperJointVelocity>("Gripper/JointVelocity", 1);
 
-	// implementation of service server callback
+	// implementation of service server callback   
+#endif
 }
 
 RosInterface::~RosInterface()

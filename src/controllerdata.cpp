@@ -149,4 +149,5 @@ ControllerData::ControllerData(int arg_c, char **arg_v, std::string node_Name)
     argc = arg_c;
     argv = arg_v;
     nodeName = node_Name;
+    ControllerData();
 }

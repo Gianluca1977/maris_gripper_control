@@ -6,6 +6,7 @@
 // Description :
 //============================================================================
 
+#include "main.h"
 #include "ros_interface.h"
 #include "controller.h"
 #include "timer.h"
@@ -91,7 +92,7 @@ void CtrlHandler::ST_Wait_Configuration()
     if(Configurator.isConfigured())
     {
         KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Motors are Configured");
-        if (armPresent) S2.Signal();//risvegliamo il braccio - torna a dare il sync        
+        if (armPresent) S2.Signal();//risvegliamo il braccio - torna a dare il sync
         InternalEvent(ST_RUNNING);
         KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller in Running state");
     }
@@ -175,6 +176,10 @@ void CtrlHandler::ST_Running()
                     Request.command = DO_NOTHING;
                     //for(int i = 0; i < NUM_MOT; i++) Motors[i].enable();
                     break;
+                case SET_HOME:
+                    Request.command = DO_NOTHING;
+                    for(int i = 0; i < NUM_MOT; i++) Motors[i].setHomePosition();
+                    break;
                 default:
                     break;
                 }
@@ -218,7 +223,7 @@ void CtrlHandler::ST_Emergency()
                     Request.command = DO_NOTHING;
                     Configurator.fromStop = false;
                     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller driven in Emergency state by user request");
-                    InternalEvent(ST_START_CONTROLLER);                    
+                    InternalEvent(ST_START_CONTROLLER);
                     break;
                 case STOP:
                     Request.command = DO_NOTHING;
@@ -246,7 +251,7 @@ void CtrlHandler::Start()
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
-    END_TRANSITION_MAP(NULL)
+            END_TRANSITION_MAP(NULL)
 }
 
 void CtrlHandler::Update()
@@ -256,7 +261,7 @@ void CtrlHandler::Update()
             TRANSITION_MAP_ENTRY(ST_WAIT_CONFIGURATION)
             TRANSITION_MAP_ENTRY(ST_RUNNING)
             TRANSITION_MAP_ENTRY(ST_EMERGENCY)
-    END_TRANSITION_MAP(NULL)
+            END_TRANSITION_MAP(NULL)
 }
 
 void CtrlHandler::Recover()
@@ -266,7 +271,7 @@ void CtrlHandler::Recover()
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
             TRANSITION_MAP_ENTRY(ST_START_CONTROLLER)
-    END_TRANSITION_MAP(NULL)
+            END_TRANSITION_MAP(NULL)
 }
 
 void* CtrlHandler::rt_thread_handler(void *p)
@@ -348,19 +353,7 @@ PubJointState::PubJointState() : Gripper(nodeIds), RosInterface(argc, argv, node
 }
 
 void PubJointState::rt_thread_handler()
-{    
-    std::vector<double> Position(NUM_MOT,0);
-    double auxDouble;
-
-    /*
-    sensor_msgs::JointState ros_msg;
-
-    ros_msg.name.resize(dof);
-    ros_msg.position.resize(dof);
-    ros_msg.velocity.resize(dof);
-    ros_msg.effort.resize(dof);
-    */
-
+{       
     if_task = WF::Task::GetInstance();
 
     // Init call for a synchronous task
@@ -382,28 +375,16 @@ void PubJointState::rt_thread_handler()
         // read and publish joint angles and velocities
         for(unsigned int i=0; i < NUM_MOT; i++)
         {
-
-            auxDouble = PUBJTASK_SAMPLETIME*pow(10,-11);
-            auxDouble = (Motors[i].PositionGrad-Position[i])/auxDouble;
-
-            //ros_msg.velocity[i]	= auxDouble*3.35;
-
-            Motors[i].Velocity = roundToSignificant(auxDouble*3.35, 4);
-            Position[i] = roundToSignificant(Motors[i].PositionGrad,4);
-
-            /* aggiorna interfaccia tcp */
-            if(TcpActive)
-            {
-                Status.Velocity[i] = Motors[i].Velocity;//auxDouble*3.35;
-                Status.PositionGrad[i] = Motors[i].PositionGrad;
-                Status.Current[i] = Motors[i].Current;
-                Status.Control[i] = Motors[i].Control;
-                Status.MotorFault[i] = Motors[i].Fault;
-                Status.MaxPosGrad[i] = Motors[i].MaxPosGrad;
-                Status.State[i] = Motors[i].State;
-                Status.Operational[i] = Motors[i].Operational;
-                Status.emerg_stop = emerg_stop;
-            }
+            /* aggiorna dati interfaccia */
+            Status.Velocity[i] = Motors[i].Velocity;//auxDouble*3.35;
+            Status.PositionGrad[i] = Motors[i].PositionGrad;
+            Status.Current[i] = Motors[i].Current;
+            Status.Control[i] = Motors[i].Control;
+            Status.MotorFault[i] = Motors[i].Fault;
+            Status.MaxPosGrad[i] = Motors[i].MaxPosGrad;
+            Status.State[i] = Motors[i].State;
+            Status.Operational[i] = Motors[i].Operational;
+            Status.emerg_stop = emerg_stop;
 
 #ifdef ROS_IF
             if(rosOk())
@@ -414,9 +395,6 @@ void PubJointState::rt_thread_handler()
 #endif
         }
 
-        /* ***************************  */
-
-        //rosInter->pubJointStates(ros_msg);
         if_task->WaitPeriod();
     }
 
@@ -430,7 +408,7 @@ void PubJointState::rt_thread_handler()
 
 /* ******************************** */
 // Gripper Class Contructor
-Controller::Controller(int arg_c, char** arg_v, std::string node_Name) : Gripper(nodeIds), ControllerData(arg_c, arg_v, node_Name), RosInterface(argc, argv, nodeName)//, StateMachine(CtrlHandler::ST_MAX_STATES, "Controller")
+Controller::Controller(int arg_c, char** arg_v, std::string node_Name) : Gripper(nodeIds), ControllerData(arg_c, arg_v, node_Name), RosInterface(arg_c, arg_v, node_Name)//, StateMachine(CtrlHandler::ST_MAX_STATES, "Controller")
 {
 #ifdef _DEBUG_
     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "CONTROLLER", "Calling Constructor of %p", this);

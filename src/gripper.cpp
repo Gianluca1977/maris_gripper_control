@@ -83,6 +83,11 @@ void Gripper::updateStates(TPCANMsg msg) {
 
                 Motors[i].PositionGrad = pcanData2Double(msg,0)*360/jointReduction;
 
+                long long actualTime = llround(KAL::GetTime());
+                Motors[i].Velocity = (Motors[i].PositionGrad - Motors[i].OldPosition)/((actualTime - Motors[i].updateTime)*1E-9);
+
+                Motors[i].OldPosition = Motors[i].PositionGrad;
+                Motors[i].updateTime = actualTime;
                 //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "States Update", "ID = %X,  curr = %X%X, pos = %X%X%X%X", Motors[i].ID, msg.DATA[5], msg.DATA[4], msg.DATA[3], msg.DATA[2], msg.DATA[1], msg.DATA[0] );
 
             }//if(cmdID == TPDO3_COBID)

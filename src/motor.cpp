@@ -78,6 +78,9 @@ void Motor::clear()
     TargetReached = false;
     Fault = false;
     Position = ERR_VAL;
+    PositionGrad = 0;
+    OldPosition = 0;
+    updateTime = 0;
     Velocity = ERR_VAL;
     MaxPosGrad = ERR_VAL;
     BootUp = false;

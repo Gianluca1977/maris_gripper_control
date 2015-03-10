@@ -8,8 +8,6 @@
 #include <ros/ros.h>
 #include <string>
 
-#define ROS_IF
-
 class RosInterface : virtual protected TcpData
 {
 public:

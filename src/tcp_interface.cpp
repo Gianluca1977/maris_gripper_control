@@ -120,7 +120,7 @@ void TcpReceive::rt_thread_handler()
 
             KAL::DebugConsole::Write(LOG_LEVEL_WARNING, TCPRECVTASK_NAME, "after accept");
             if (newsockfd < 0){
-                error("ERROR ON ACCEPT");
+                //error("ERROR ON ACCEPT");
             } else {
                 std::cout << "CONNECTION ACCEPT" << std::endl;
                 TcpActive = true;

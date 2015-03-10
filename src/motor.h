@@ -42,11 +42,12 @@ public:
         char Old_State_byte[2];
     };
 
-    long Velocity;	//last found vel
+    double Velocity;	//last found vel
     long Position;	//last found pos
     long Current;
     long Control;
     double PositionGrad;
+    double OldPosition;
     double MaxPosGrad;
     double MinPosGrad;
 
@@ -54,6 +55,8 @@ public:
     bool TargetReached;
     bool BootUp;
     bool Fault;
+
+    long long updateTime;
 
     Motor();
     Motor(int id);

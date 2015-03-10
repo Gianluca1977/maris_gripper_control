@@ -81,7 +81,7 @@
 #define SRV_MODE_HOMING		3
 #define SRV_MODE_TACTILE_OFFSET	4
 
-class PubJointState : virtual public CanDriver, virtual public Gripper, virtual public ControllerData, virtual public Supervisor, virtual public TcpData, virtual public RosInterface, private rt_thread
+class PubJointState : virtual public CanDriver, virtual public Gripper, virtual public ControllerData, virtual public Supervisor, virtual public TcpData, private rt_thread, virtual public RosInterface
 {
 public:
     PubJointState();
@@ -147,7 +147,7 @@ private:
 class Controller : virtual public CtrlHandler, virtual public PubJointState, virtual public TcpSend, virtual public TcpReceive
 {
 public:
-    Controller(int argc, char** argv, std::string nodeName);
+    Controller(int arg_c, char** arg_v, std::string node_Name);
     ~Controller();
 
     void process_message();

@@ -34,7 +34,7 @@ typedef struct
 
     int State[NUM_MOT];
 
-    long long Velocity[NUM_MOT];	//velocita attuale
+    double Velocity[NUM_MOT];	//velocita attuale
     long long Current[NUM_MOT];	//corrente attuale
     long long Control[NUM_MOT];		//velocita impostata
     double PositionGrad[NUM_MOT];	//posizione in gradi
@@ -78,6 +78,7 @@ typedef struct
 #define PRESHAPE        8
 #define STOP            9
 #define RUN             10
+#define SET_HOME        11
 
 /* struct setting (user -> control) */
 typedef struct
