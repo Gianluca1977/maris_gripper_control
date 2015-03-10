@@ -1,36 +1,35 @@
 #ifndef ROSINTERFACE_H_
 #define ROSINTERFACE_H_
 
-#include "controller.h"
-#include "can_driver.h"
+#include "interface_data.h"
+#include "tcp_interface.h"
 
 // ROS includes
 #include <ros/ros.h>
 #include <string>
 
+#define ROS_IF
 
-// ROS message includes
-//#include <sensor_msgs/JointState.h>
-
-class RosInterface {
+class RosInterface : virtual protected TcpData
+{
 public:
-    RosInterface(int argc, char** argv, Controller* gripper, std::string name);
+    RosInterface(int argc, char** argv, std::string name);
 	virtual ~RosInterface();
 
-	void init();
-	void spinInterface();
-	bool okInterface();
+    void rosSpinOnce();
+    bool rosOk();
+    void rosPublish();
 
 private:
     //declaration of service server callback
 
 	// declaration of topics to publish
-    ros::Publisher ros_publisher;
+    ros::Publisher ros_publisher_pos;
+    ros::Publisher ros_publisher_vel;
 
 	// service servers
 
 protected:
-    Controller* gripper_app;
 
     std::string nodeName;
 };

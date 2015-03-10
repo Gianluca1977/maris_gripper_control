@@ -52,6 +52,8 @@ int main(int argc, char** argv)
 
     int ret;   
 
+    std::string nodeName = "gripper_control";
+
     //si ottiene il singleton per la gestione del task
     maintask = WF::Task::GetInstance();
 
@@ -60,7 +62,7 @@ int main(int argc, char** argv)
         exit(-1);
     }
 
-    Controller gripper_control;
+    Controller gripper_control(argc, argv, nodeName);
 
     ret = maintask->WaitRunning();
     if (ret != WF_RV_OK){

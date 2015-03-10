@@ -3,13 +3,13 @@
 
 //Timer::Callback Timer::CallbackFunc;
 
-Timer::Timer() : timeout(0), StateMachine(Timer::ST_MAX_STATES, "Timer")
+Timer::Timer() : timeout(0), StateMachine(Timer::ST_MAX_STATES)
 {
     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "TIMER", "Calling Default Constructor of %p", this);
     Reset();
 }
 
-Timer::Timer(long long expire_time) : timeout(expire_time), StateMachine(Timer::ST_MAX_STATES, "Timer")
+Timer::Timer(long long expire_time) : timeout(expire_time), StateMachine(Timer::ST_MAX_STATES)
 {
     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "TIMER", "Calling Constructor of %p", this);
     Reset();

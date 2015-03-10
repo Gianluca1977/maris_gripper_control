@@ -6,6 +6,7 @@
 // Description :
 //============================================================================
 
+#include "ros_interface.h"
 #include "controller.h"
 #include "timer.h"
 
@@ -23,7 +24,7 @@ WF::BinarySemaphore CtrlHandler::S1;
 WF::BinarySemaphore CtrlHandler::S2;
 WF::BinarySemaphore CtrlHandler::S3;
 
-CtrlHandler::CtrlHandler() : StateMachine(CtrlHandler::ST_MAX_STATES, "CtrlHandler"), Gripper(nodeIds)//, Configurator(Motors)
+CtrlHandler::CtrlHandler() : StateMachine(CtrlHandler::ST_MAX_STATES), Gripper(nodeIds)//, Configurator(Motors)
 {
     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Calling Constructor of %p", this);
 
@@ -184,36 +185,16 @@ void CtrlHandler::ST_Running()
                 */
             }
         }//if tcp
-        /******** end of via TCP ******/
+        /******** end TCP Interface ******/
 
-        /************* big control if using ROS interface*************/
+        /************* ROS Interface *************/
         /*
-        if(isHomeDone &&  !fault && !emerg_stop){
-            //fKinematics();
-            switch(srv_preshape){
-            case 0:
+        if()
+        {
 
-                break;
-            case 1:
 
-                break;
-            default:
-                break;
-            }//switch((srv_preshape)
 
-            if(emerg_stop){
-                data.assign(dof,0);
-                srv_preshape = -1;
-                auxInternalCall = -1;
-                action_free = true;
-                action_done = false;
-            }
-            if(fault)//se qualche Motore in fault fermi tutti.
-                data.assign(dof,0);
-
-            //moveVel(data);
-
-        }//big control if
+        }// end ROS Interface
         */
     }//ifsemRet
 }
@@ -297,7 +278,8 @@ void* CtrlHandler::rt_thread_handler(void *p)
 
     /* task initialization */
     if_task = WF::Task::GetInstance();
-    if ((ret=if_task->CreateSync(CONTROLTASK_NAME, CONTROLTASK_SAMPLETIME, WF_TASK_TYPE_USER)) != WF_RV_OK){
+    if ((ret=if_task->CreateSync(CONTROLTASK_NAME, CONTROLTASK_SAMPLETIME, WF_TASK_TYPE_USER)) != WF_RV_OK)
+    {
         KAL::DebugConsole::Write(LOG_LEVEL_ERROR, CONTROLTASK_NAME, "CreateSync fallita. (valore ritorno %d)", ret);
         WF::Task::Exit();
     }
@@ -360,20 +342,15 @@ void* CtrlHandler::rt_thread_handler(void *p)
     returnValue = (void *) WF_RV_OK;
 }
 
-PubJointState::PubJointState() : Gripper(nodeIds)
+PubJointState::PubJointState() : Gripper(nodeIds), RosInterface(argc, argv, nodeName)
 {
     if_thread.Create(thread_func, this);
 }
 
 void PubJointState::rt_thread_handler()
-{
-    std::string msg;
-    std::stringstream ss;
-    int dof = NUM_MOT;
-    std::vector<double> Position(dof,0);
+{    
+    std::vector<double> Position(NUM_MOT,0);
     double auxDouble;
-
-    std::vector<long> req_velocity(dof,0);
 
     /*
     sensor_msgs::JointState ros_msg;
@@ -387,7 +364,8 @@ void PubJointState::rt_thread_handler()
     if_task = WF::Task::GetInstance();
 
     // Init call for a synchronous task
-    if ((if_task->CreateSync(PUBJSTASK_NAME, PUBJTASK_SAMPLETIME)) != WF_RV_OK){
+    if ((if_task->CreateSync(PUBJSTASK_NAME, PUBJTASK_SAMPLETIME)) != WF_RV_OK)
+    {
         std::cerr << "Cannot create pubJointStates task." << std::endl;
         WF::Task::Exit();
     }
@@ -399,21 +377,12 @@ void PubJointState::rt_thread_handler()
     if_task->WaitRunning();
     if_task->GotoSoft();
 
-
-    while(if_task->Continue()){
-#ifdef ROS_IF
-        if(rosInter->okInterface()) rosInter->spinInterface();
-#endif        
+    while(if_task->Continue())
+    {
         // read and publish joint angles and velocities
-        for(unsigned int i=0; i<NUM_MOT;i++)
+        for(unsigned int i=0; i < NUM_MOT; i++)
         {
-#ifdef ROS_IF
-            if(rosInter->okInterface())
-            {
-                ros_msg.position[i] = roundToSignificant(Motors[i].Position_grad, 4);
-                ros_msg.effort[i] = roundToSignificant(Motors[i].last_curr, 4);
-            }
-#endif
+
             auxDouble = PUBJTASK_SAMPLETIME*pow(10,-11);
             auxDouble = (Motors[i].PositionGrad-Position[i])/auxDouble;
 
@@ -423,7 +392,8 @@ void PubJointState::rt_thread_handler()
             Position[i] = roundToSignificant(Motors[i].PositionGrad,4);
 
             /* aggiorna interfaccia tcp */
-            if(TcpActive){
+            if(TcpActive)
+            {
                 Status.Velocity[i] = Motors[i].Velocity;//auxDouble*3.35;
                 Status.PositionGrad[i] = Motors[i].PositionGrad;
                 Status.Current[i] = Motors[i].Current;
@@ -434,6 +404,14 @@ void PubJointState::rt_thread_handler()
                 Status.Operational[i] = Motors[i].Operational;
                 Status.emerg_stop = emerg_stop;
             }
+
+#ifdef ROS_IF
+            if(rosOk())
+            {
+                rosPublish();
+                rosSpinOnce();
+            }
+#endif
         }
 
         /* ***************************  */
@@ -452,12 +430,13 @@ void PubJointState::rt_thread_handler()
 
 /* ******************************** */
 // Gripper Class Contructor
-Controller::Controller() : Gripper(nodeIds)//, StateMachine(CtrlHandler::ST_MAX_STATES, "Controller")
+Controller::Controller(int arg_c, char** arg_v, std::string node_Name) : Gripper(nodeIds), ControllerData(arg_c, arg_v, node_Name), RosInterface(argc, argv, nodeName)//, StateMachine(CtrlHandler::ST_MAX_STATES, "Controller")
 {
 #ifdef _DEBUG_
     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "CONTROLLER", "Calling Constructor of %p", this);
     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "CONTROLLER", "Address of configurator = %p", &Configurator);
 #endif
+
 }
 
 // Gripper Class Destructor

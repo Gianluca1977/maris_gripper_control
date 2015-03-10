@@ -2,6 +2,7 @@
 #define CONTROLLERDATA_H
 
 #include "wf.h"
+#include <string>
 
 #define MAX_CONF	6
 #define NUM_MOT     3
@@ -11,6 +12,11 @@ class ControllerData
 public:
 
     ControllerData();
+    ControllerData(int arg_c, char** arg_v, std::string node_Name);
+
+    static int argc;
+    static char** argv;
+    static std::string nodeName;
 
     static WF::Semaphore MsgSem;
 

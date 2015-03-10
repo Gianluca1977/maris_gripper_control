@@ -9,10 +9,8 @@ struct StateStruct;
 class StateMachine
 {
 public:
-    StateMachine(int maxStates, char* name);
+    StateMachine(int maxStates);
     virtual ~StateMachine() {}
-
-    char* ST_name;
 
 protected:
     enum { EVENT_IGNORED = 0xFE, CANNOT_HAPPEN };
@@ -22,6 +20,7 @@ protected:
     void ExternalEvent(unsigned char, EventData* = NULL);
     void InternalEvent(unsigned char, EventData* = NULL);
     virtual const StateStruct* GetStateMap() = 0;
+
 private:
     const int _maxStates;
     bool _eventGenerated;

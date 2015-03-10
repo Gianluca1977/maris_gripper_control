@@ -2,14 +2,13 @@
 #include "state_machine.h"
 #include "wf.h"
 
-StateMachine::StateMachine(int maxStates, char* name) :
+StateMachine::StateMachine(int maxStates) :
     _maxStates(maxStates),
     currentState(0),
     _eventGenerated(false),
-    _pEventData(NULL),
-    ST_name(name)
+    _pEventData(NULL)
 {    
-    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "STATE_MACHINE", "Created by %s %p with currentState = %d, _maxStates = %d", ST_name, this, currentState, _maxStates);
+    //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "STATE_MACHINE", "Created by %p with currentState = %d, _maxStates = %d", this, currentState, _maxStates);
 }
 
 // generates an external event. called once per external event

@@ -94,59 +94,7 @@ typedef struct
 #ifdef ARCH_32BIT
     //int fake_align[2];	//align with 64 bit grafic interface
 #endif
-} SystemRequest_2;
-
-typedef struct
-{
-
-    long long req_vel[NUM_MOT];
-    long long req_pos[NUM_MOT];
-    long long conf_geom[3][2]; //riga - dito / colonna - info
-
-    /*                  d  i
-     * 0 - dito 1		conf_geom[0][0] = apert. dito 1
-     * 1 - dito 2  		conf_geom[1][0] = apert. dito 2
-     * 2 - dito 3		conf_geom[2][1] = offset fito 3
-     */    
-    /*
-     * ***   info
-     * 0 - apertura (0 - 100)
-     * 1 - thumb offset (-20 - +100) //TODO: da verificare il range
-     */
-
-    long long repeat;
-    long long butNum;	// (0-px 1-th 2-pl)
-    long long dummyForce;
-
-    bool doHome;
-    bool parking;
-    bool emerg_stop;
-    bool recover;
-    //float forza;
-
-    bool highLevel;  // true - using high level / false - using low level
-
-/* *** tcp interface stuffs ***** */
-
-    bool setIniPos;
-    bool setFinPos;
-    bool goIniPos;
-    bool goFinPos;
-
-    bool pos;
-    bool manualHomeDone;
-    bool tcpActive;
-/* ********** **************** */
-
-    int desired_conf;
-
-    bool fake_align[6];
-
-
 } SystemRequest;
-
-/* ******************************** */
-
 
 #endif /* INTERFACE_DATA_H_ */
 

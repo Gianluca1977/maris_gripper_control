@@ -1,4 +1,3 @@
-
 #include <libconfig.h++>
 
 #include "main.h"
@@ -23,6 +22,10 @@ bool ControllerData::fault;
 bool ControllerData::tcpDoHome;
 bool ControllerData::tcpIsHomeDone;
 bool ControllerData::emerg_stop;
+
+int ControllerData::argc;
+char** ControllerData::argv;
+std::string ControllerData::nodeName;
 
 WF::Semaphore ControllerData::MsgSem;
 
@@ -70,7 +73,7 @@ ControllerData::ControllerData()
         if(sockTCP.active) {
             printf("A server TCP will be created. Port: %d\n", sockTCP.port);
             //printf(" Addr: %s \n", sockTCP.addr.c_str());
-            std::cout << "sizeof(SystemRequest_2) = " <<  sizeof(SystemRequest_2) << std::endl;
+            std::cout << "sizeof(SystemRequest_2) = " <<  sizeof(SystemRequest) << std::endl;
             std::cout << "sizeof(SystemStatus) = " <<  sizeof(SystemStatus) << std::endl << std::endl;
         }
 
@@ -139,4 +142,11 @@ ControllerData::ControllerData()
     //setTactOffset = false;
 
     //return lookup;
+}
+
+ControllerData::ControllerData(int arg_c, char **arg_v, std::string node_Name)
+{
+    argc = arg_c;
+    argv = arg_v;
+    nodeName = node_Name;
 }

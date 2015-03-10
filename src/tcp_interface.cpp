@@ -13,7 +13,7 @@ struct sockaddr_in TcpData::serv_addr, TcpData::cli_addr;
 struct hostent* TcpData::server;
 
 SystemStatus TcpData::Status;
-SystemRequest_2 TcpData::Request;
+SystemRequest TcpData::Request;
 
 void error(const char *msg)
 {
@@ -32,36 +32,28 @@ TcpInterface::~TcpInterface()
 TcpReceive::TcpReceive()
 {
     //init the Request struct with non valid values
-
-//    Request.doHome = false;
-//    Request.emerg_stop = false;
-//    Request.parking = false;
-//    Request.recover = false;
-//    //Request.forza = ERR_VAL;
-//    Request.highLevel = true;
-
     Request.command = DO_NOTHING;
 
-    for(unsigned int i=0;i<NUM_MOT;i++){
+    for(unsigned int i=0;i<NUM_MOT;i++)
+    {
         Request.req_pos[i] = ERR_VAL;
         Request.req_vel[i] = 0;
     }
 
     //KAL::DebugConsole::Write(LOG_LEVEL_INFO, TCPRECVTASK_NAME, "Before creating TcpReceive");
-
     if_thread.Create(thread_func, this);
 }
 
 TcpSend::TcpSend()
 {
-    for(unsigned int f = 0; f < NUM_MOT; f++){
+    for(unsigned int f = 0; f < NUM_MOT; f++)
+    {
         Status.JointID[f] = nodeIds[f];	//riempio il vettore di ID della interfaccia
     }
 
     Status.actCycle = 0;
 
     //KAL::DebugConsole::Write(LOG_LEVEL_INFO, TCPSENDTASK_NAME, "Before creating TcpSend");
-
     if_thread.Create(thread_func, this);
 }
 
@@ -138,9 +130,9 @@ void TcpReceive::rt_thread_handler()
         if(TcpActive){
             KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TCPRECVTASK_NAME, "Waiting for incoming TCP data");
 
-            ret = read(newsockfd,&Request,sizeof(SystemRequest_2));
+            ret = read(newsockfd,&Request,sizeof(SystemRequest));
 
-            if(ret == sizeof(SystemRequest_2)){
+            if(ret == sizeof(SystemRequest)){
                 //#ifdef _DEBUG_
                 KAL::DebugConsole::Write(LOG_LEVEL_INFO, TCPRECVTASK_NAME, "Command %d",Request.command);
                 KAL::DebugConsole::Write(LOG_LEVEL_INFO, TCPRECVTASK_NAME, "preshape %d",Request.preshape);

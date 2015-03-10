@@ -1,12 +1,6 @@
 #ifndef CONTROLLER_H_
 #define CONTROLLER_H_
 
-//#define ROS_IF
-
-#ifdef ROS_IF
-#include "ros_interface.h"
-#endif
-
 #include "can_driver.h"
 #include "interface_data.h"
 #include "tcp_interface.h"
@@ -18,6 +12,7 @@
 #include "motor_configurator.h"
 #include "state_machine.h"
 #include "timer.h"
+#include "ros_interface.h"
 
 #include "wf.h"
 
@@ -73,12 +68,6 @@
 #define MAINTASK_PRIORITY			(8)
 #define OPENCAN_QUEUE_DIM			(2)
 
-//il sampletime e' espresso in nanosecondi
-//sono gia' definite le seguenti grandezze
-// WF_TIME_ONE_S
-// WF_TIME_ONE_MS
-// WF_TIME_ONE_US
-// WF_TIME_ONE_NS
 #define CONTROLTASK_SAMPLETIME		(10 * WF_TIME_ONE_MS)
 #define PUBJTASK_SAMPLETIME     	(500 * WF_TIME_ONE_MS)
 #define INIT_PHASEDELAY             (100 * WF_TIME_ONE_MS)//(1 * WF_TIME_ONE_S)//
@@ -92,14 +81,7 @@
 #define SRV_MODE_HOMING		3
 #define SRV_MODE_TACTILE_OFFSET	4
 
-typedef unsigned char  BYTE; // 1byte
-typedef unsigned short  WORD; // 2bytes
-
-#ifdef ROS_IF
-class RosInterface;
-#endif
-
-class PubJointState : virtual public CanDriver, virtual public Gripper, virtual public ControllerData, virtual public Supervisor, virtual public TcpData, private rt_thread
+class PubJointState : virtual public CanDriver, virtual public Gripper, virtual public ControllerData, virtual public Supervisor, virtual public TcpData, virtual public RosInterface, private rt_thread
 {
 public:
     PubJointState();
@@ -165,7 +147,7 @@ private:
 class Controller : virtual public CtrlHandler, virtual public PubJointState, virtual public TcpSend, virtual public TcpReceive
 {
 public:
-    Controller();
+    Controller(int argc, char** argv, std::string nodeName);
     ~Controller();
 
     void process_message();
@@ -175,7 +157,6 @@ public:
 
 	void install_signal(void);
 	void signal_handler(int unused);
-
 };
 
 #endif /* CONTROLLER_H_ */

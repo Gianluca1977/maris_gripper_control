@@ -29,7 +29,7 @@ void MotorConfigurator::timerExpired()
 
 void MotorConfigurator::StartConfiguration()
 {
-    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling Start Configuration of %s %p", ST_name, this);
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling Start Configuration of %p", this);
 
     BEGIN_TRANSITION_MAP
         TRANSITION_MAP_ENTRY(ST_BOOTUP_DEV) // ST_IDLE
@@ -115,7 +115,7 @@ void MotorConfigurator::Restart()
 }
 
 
-MotorConfigurator::MotorConfigurator() : StateMachine(MotorConfigurator::ST_MAX_STATES, "MotorConfigurator")
+MotorConfigurator::MotorConfigurator() : StateMachine(MotorConfigurator::ST_MAX_STATES)
 {
      KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling default constructor of %p", this);
      //WaitTime.CallbackFunc = reinterpret_cast<Timer::Callback>(&MotorConfigurator::timerExpired);
@@ -124,7 +124,7 @@ MotorConfigurator::MotorConfigurator() : StateMachine(MotorConfigurator::ST_MAX_
      fromStop = false;
 }
 
-MotorConfigurator::MotorConfigurator(Motor (&motor)[NUM_MOT]) : StateMachine(MotorConfigurator::ST_MAX_STATES, "MotorConfigurator"), GripperMotors(motor)
+MotorConfigurator::MotorConfigurator(Motor (&motor)[NUM_MOT]) : StateMachine(MotorConfigurator::ST_MAX_STATES), GripperMotors(motor)
 {
     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling Constructor of %p", this);
     //WaitTime.CallbackFunc = reinterpret_cast<Timer::Callback>(&MotorConfigurator::timerExpired);
