@@ -117,7 +117,7 @@ void MotorConfigurator::Restart()
 
 MotorConfigurator::MotorConfigurator() : StateMachine(MotorConfigurator::ST_MAX_STATES)
 {
-     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling default constructor of %p", this);
+     //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling default constructor of %p", this);
      //WaitTime.CallbackFunc = reinterpret_cast<Timer::Callback>(&MotorConfigurator::timerExpired);
      motor_index = 0;
      Configured = false;
@@ -126,7 +126,7 @@ MotorConfigurator::MotorConfigurator() : StateMachine(MotorConfigurator::ST_MAX_
 
 MotorConfigurator::MotorConfigurator(Motor (&motor)[NUM_MOT]) : StateMachine(MotorConfigurator::ST_MAX_STATES), GripperMotors(motor)
 {
-    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling Constructor of %p", this);
+    //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling Constructor of %p", this);
     //WaitTime.CallbackFunc = reinterpret_cast<Timer::Callback>(&MotorConfigurator::timerExpired);
     motor_index = 0;
     Configured = false;
@@ -203,7 +203,7 @@ void MotorConfigurator::ST_Done()
 void MotorConfigurator::ST_Fault()
 {
     //fromFault = true;
-    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling ST_Fault of %p", this);
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling ST_Fault");
     Configured = false;
     for(motor_index = 0; motor_index < NUM_MOT; motor_index++)
     {

@@ -8,29 +8,80 @@
 #include <ros/ros.h>
 #include <string>
 
+#include <actionlib/server/simple_action_server.h>
+
+// ROS Messages
+#include <gripper_control/GripperJointPosition.h>
+#include <gripper_control/GripperJointVelocity.h>
+#include <gripper_control/GripperStatus.h>
+
+// ROS Services
+#include <gripper_control/GripperSelectShape.h>
+
+// ROS Actions
+#include <gripper_control/GripperSelectShapeAction.h>
+
+#define ROS_INTERFACE_NAME "ROS_INTERFACE"
+
+class ShapeActionInterface;
+
 class RosInterface : virtual protected TcpData
 {
 public:
     RosInterface(int argc, char** argv, std::string name);
-	virtual ~RosInterface();
+    virtual ~RosInterface();
 
     void rosSpinOnce();
     bool rosOk();
     void rosPublish();
 
 private:
-    //declaration of service server callback
 
-	// declaration of topics to publish
+    // declaration of topics to publish
     ros::Publisher ros_publisher_pos;
     ros::Publisher ros_publisher_vel;
+    ros::Publisher ros_publisher_status;
 
-	// service servers
+    ros::ServiceServer ros_service_shape;
+
+    //declaration of service server callback
+    bool selectShape(gripper_control::GripperSelectShape::Request  &req, gripper_control::GripperSelectShape::Response &res);
+
+    // service servers
+
+protected:
+    std::string nodeName;
+
+    ShapeActionInterface* actionInterface;
+};
+
+class ShapeActionInterface : virtual protected TcpData
+{
+public:
+    ShapeActionInterface(ros::NodeHandle &nh, std::string name) : as_(nh, name, boost::bind(&ShapeActionInterface::executeCB, this, _1), false), actionName(name), nh_(nh)
+    {
+        as_.start();
+    }
+
+    ~ShapeActionInterface(void)
+    {
+
+    }
+
+    //declaration of action server callback
+    void executeCB(const gripper_control::GripperSelectShapeGoalConstPtr &goal);
 
 protected:
 
-    std::string nodeName;
-};
+    ros::NodeHandle nh_;
 
+    std::string actionName;
+
+    actionlib::SimpleActionServer<gripper_control::GripperSelectShapeAction> as_;
+
+    // create messages that are used to published feedback/result
+    gripper_control::GripperSelectShapeFeedback feedback_;
+    gripper_control::GripperSelectShapeResult result_;
+};
 
 #endif /* ROSINTERFACE_H_ */

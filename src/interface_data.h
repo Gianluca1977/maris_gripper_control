@@ -34,11 +34,11 @@ typedef struct
 
     int State[NUM_MOT];
 
-    double Velocity[NUM_MOT];	//velocita attuale
+    double Velocity[NUM_MOT];	//velocita in rad/s
+    double Position[NUM_MOT];	//posizione in rad
+    double MaxPosGrad[NUM_MOT];	//massima apertura
     long long Current[NUM_MOT];	//corrente attuale
     long long Control[NUM_MOT];		//velocita impostata
-    double PositionGrad[NUM_MOT];	//posizione in gradi
-    double MaxPosGrad[NUM_MOT];	//massima apertura
 
     bool Operational[NUM_MOT];
     bool MotorFault[NUM_MOT];
@@ -61,7 +61,7 @@ typedef struct
 
     bool isInitialized_;
     bool emerg_stop;
-    bool resetSensors;
+    bool lastCommandAccomplished;
 
     bool fake_align[12];	//align with 64 bit grafic interface
 } SystemStatus;

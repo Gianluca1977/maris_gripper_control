@@ -2,6 +2,8 @@
 #include "controller.h"
 #include <iostream>
 
+#define PI 3.14
+
 Motor Gripper::Motors[NUM_MOT];
 int Gripper::jointReduction;
 int Gripper::safeJointOffset;
@@ -52,6 +54,12 @@ bool Gripper::isOperative()
     return true;
 }
 
+bool Gripper::commandExecuted()
+{
+    for(int i = 0; i < NUM_MOT; i++) if(!Motors[i].TargetReached) return false;
+    return true;
+}
+
 void Gripper::stop()
 {
     for(int i = 0; i < NUM_MOT; i++) Motors[i].stop();
@@ -82,11 +90,12 @@ void Gripper::updateStates(TPCANMsg msg) {
                 Motors[i].Current = (tmp_curr << 8) + msg.DATA[4];
 
                 Motors[i].PositionGrad = pcanData2Double(msg,0)*360/jointReduction;
+                Motors[i].Position = Motors[i].PositionGrad*PI/180;
 
                 long long actualTime = llround(KAL::GetTime());
-                Motors[i].Velocity = (Motors[i].PositionGrad - Motors[i].OldPosition)/((actualTime - Motors[i].updateTime)*1E-9);
+                Motors[i].Velocity = (Motors[i].Position - Motors[i].OldPosition)/((actualTime - Motors[i].updateTime)*1E-9);
 
-                Motors[i].OldPosition = Motors[i].PositionGrad;
+                Motors[i].OldPosition = Motors[i].Position;
                 Motors[i].updateTime = actualTime;
                 //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "States Update", "ID = %X,  curr = %X%X, pos = %X%X%X%X", Motors[i].ID, msg.DATA[5], msg.DATA[4], msg.DATA[3], msg.DATA[2], msg.DATA[1], msg.DATA[0] );
 

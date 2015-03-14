@@ -24,6 +24,8 @@ public:
 
     bool isOperative();
 
+    bool commandExecuted();
+
     bool hasID(int nodeID);
 
     void updateStates(TPCANMsg msg);

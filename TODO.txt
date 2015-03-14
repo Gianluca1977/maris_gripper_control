@@ -1,0 +1,11 @@
+- Implementare completamento comandi (for(int i = 0; i < NUM_MOT; i++) target_reached &= Motors[i].target_reached;) -> DA TESTARE
+
+- Implementare servizio ROS selezione shape -> DA TESTARE
+
+- Implementare action ROS selezione shape -> DA TESTARE
+
+- Implementare controllo limitazione tempo/corrente(Ampere)
+
+- Implementare homing
+
+- Migliorare interfaccia
