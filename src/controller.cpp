@@ -13,9 +13,11 @@
 
 #include <boost/algorithm/string.hpp>
 
-MotorConfigurator CtrlHandler::Configurator = MotorConfigurator();
+MotorConfigurator CtrlHandler::configurator = MotorConfigurator();
+Timer CtrlHandler::configuratorTimer = Timer();
 
-Timer CtrlHandler::MotorConfiguratorTimer = Timer();
+MotorConfigurator CtrlHandler::guard = MotorGuard();
+Timer CtrlHandler::guardTimer = Timer();
 
 WF::Thread CtrlHandler::if_thread;
 WF::Task* CtrlHandler::if_task;
@@ -29,10 +31,10 @@ CtrlHandler::CtrlHandler() : StateMachine(CtrlHandler::ST_MAX_STATES), Gripper(n
 {
     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Calling Constructor of %p", this);
 
-    Configurator.Init(Motors);
-    MotorConfiguratorTimer.Init(INIT_PHASEDELAY);
+    configurator.Init(Motors);
+    configuratorTimer.Init(INIT_PHASEDELAY);
 
-    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Address of configurator = %p", &Configurator);
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Address of configurator = %p", &configurator);
 
 #ifdef ROS_IF
 
@@ -72,25 +74,35 @@ CtrlHandler::~CtrlHandler()
     MsgSem.Release();
     //DEBUG("%s thread joined\n",get_label());
 }
+Timer CtrlHandler::getGuardTimer()
+{
+    return guardTimer;
+}
+
+void CtrlHandler::setGuardTimer(const Timer &value)
+{
+    guardTimer = value;
+}
+
 
 void CtrlHandler::ST_Start_Controller()
 {
     //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Calling Configurator.StartConfiguration() of %s %p %p from %p", this->Configurator.ST_name, &(this->Configurator), GetStateMap(), this);
-    Configurator.StartConfiguration(); // calling within ST_START_CONTROLLER, then transit to ST_WAIT_CONFIGURATION
-    MotorConfiguratorTimer.Start();
+    configurator.StartConfiguration(); // calling within ST_START_CONTROLLER, then transit to ST_WAIT_CONFIGURATION
+    configuratorTimer.Start();
     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Configurator Started");
     InternalEvent(ST_WAIT_CONFIGURATION);
 }
 
 void CtrlHandler::ST_Wait_Configuration()
 {
-    if(!armPresent && Configurator.fromStop)
+    if(!armPresent && configurator.fromStop)
     {
         send_sync_msg();
     }
 
-    MotorConfiguratorTimer.Update(); // calling within ST_WAIT_CONFIGURATION
-    if(Configurator.isConfigured())
+    configuratorTimer.Update(); // calling within ST_WAIT_CONFIGURATION
+    if(configurator.isConfigured())
     {
         KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Motors are Configured");
         if (armPresent) S2.Signal();//risvegliamo il braccio - torna a dare il sync
@@ -99,22 +111,25 @@ void CtrlHandler::ST_Wait_Configuration()
     }
     else
     {
-        if(MotorConfiguratorTimer.isExpired())
+        if(configuratorTimer.isExpired())
         {
-            Configurator.timerExpired();
-            if(!MotorConfiguratorTimer.Restart()) KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "TIMER", "Error restarting timer");\
+            configurator.timerExpired();
+            if(!configuratorTimer.Restart()) KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "TIMER", "Error restarting timer");\
         }
     }
 }
 
 void CtrlHandler::ST_Running()
 {
-    if(!isOperative() || !Configurator.isConfigured())
+    if(!isOperative() || !configurator.isConfigured())
     {
         KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller in Emergency state");
         InternalEvent(ST_EMERGENCY);
         return;
     }
+
+    // call motor guard
+    guard.update();
 
     int semRet = WF_RV_OK;
     if (armPresent == true) semRet = S3.Wait_If(); //check for operative sem
@@ -176,7 +191,7 @@ void CtrlHandler::ST_Running()
             case STOP:
                 resetCommand();
                 //for(int i = 0; i < NUM_MOT; i++) Motors[i].disable();
-                Configurator.Stop();
+                configurator.Stop();
                 break;
             case RUN:
                 resetCommand();
@@ -208,19 +223,19 @@ void CtrlHandler::ST_Emergency()
             {
             case RECOVER:
                 resetCommand();
-                Configurator.fromStop = false;
+                configurator.fromStop = false;
                 KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller driven in Emergency state by user request");
                 InternalEvent(ST_START_CONTROLLER);
                 break;
             case STOP:
                 resetCommand();
                 //for(int i = 0; i < NUM_MOT; i++) Motors[i].disable();
-                Configurator.Stop();
+                configurator.Stop();
                 break;
             case RUN:
                 resetCommand();
                 //for(int i = 0; i < NUM_MOT; i++) Motors[i].enable();
-                Configurator.Restart();
+                configurator.Restart();
                 InternalEvent(ST_WAIT_CONFIGURATION);
                 break;
             default:
@@ -322,7 +337,7 @@ void* CtrlHandler::rt_thread_handler(void *p)
         current_ctrl->flush_msg_queue();
 
         /* send sync command */
-        if(!armPresent && current_ctrl->Configurator.isConfigured())
+        if(!armPresent && current_ctrl->configurator.isConfigured())
         {
             current_ctrl->send_sync_msg();
         }

@@ -88,7 +88,7 @@ void ShapeActionInterface::executeCB(const gripper_control::GripperSelectShapeGo
     bool success = true;
 
     // push_back the seeds for the fibonacci sequence
-    feedback_.done = false;
+    feedback_.progress = 0;
     result_.done = false;
 
     // publish info to the console for the user
@@ -115,7 +115,7 @@ void ShapeActionInterface::executeCB(const gripper_control::GripperSelectShapeGo
             success = false;
             break;
         }
-        feedback_.done = Status.lastCommandAccomplished;
+        feedback_.progress = Status.Position[0];
         // publish the feedback
         as_.publishFeedback(feedback_);
         // this sleep is not necessary, the sequence is computed at 1 Hz for demonstration purposes
@@ -124,7 +124,7 @@ void ShapeActionInterface::executeCB(const gripper_control::GripperSelectShapeGo
 
     if(success)
     {
-        result_.done = feedback_.done;
+        result_.done = Status.lastCommandAccomplished;
         ROS_INFO("%s: Succeeded", nodeName.c_str());
         // set the action state to succeeded
         as_.setSucceeded(result_);

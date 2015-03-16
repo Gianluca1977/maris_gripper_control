@@ -117,7 +117,7 @@ public:
 
     MotorConfigurator();
 
-    void Init(Motor *motor){GripperMotors = motor;}
+    void init(Motor *motor){GripperMotors = motor;}
 
     void timerExpired(void);
     void StartConfiguration(void);

@@ -13,6 +13,7 @@
 #include "state_machine.h"
 #include "timer.h"
 #include "ros_interface.h"
+#include "motorguard.h"
 
 #include "wf.h"
 
@@ -100,8 +101,11 @@ public:
     static WF::Task *if_task;
     static void* returnValue;
 
-    static MotorConfigurator Configurator;
-    static Timer WaitTimer;
+    static MotorConfigurator configurator;
+    static Timer configuratorTimer;
+
+    static MotorGuard guard;
+    static Timer guardTimer;
 
     static WF::BinarySemaphore S1;
     static WF::BinarySemaphore S2;
