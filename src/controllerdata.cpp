@@ -27,7 +27,8 @@ int ControllerData::argc;
 char** ControllerData::argv;
 std::string ControllerData::nodeName;
 
-WF::BinarySemaphore ControllerData::MsgSem;
+WF::BinarySemaphore ControllerData::RequestSem;
+WF::BinarySemaphore ControllerData::StatusSem;
 
 ControllerData::ControllerData()
 {

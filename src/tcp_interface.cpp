@@ -130,8 +130,8 @@ void TcpReceive::rt_thread_handler()
         if(TcpActive){
             KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TCPRECVTASK_NAME, "Waiting for incoming TCP data");
 
-            ret = MsgSem.Wait();
-            if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPRECVTASK_NAME, "Error in MsgSem.Signal()");
+            ret = RequestSem.Wait();
+            if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPRECVTASK_NAME, "Error in RequestSem.Signal()");
 
             ret = read(newsockfd,&Request,sizeof(SystemRequest));
 
@@ -170,15 +170,15 @@ void TcpReceive::rt_thread_handler()
                 close(sockfd);
             }
 
-            ret = MsgSem.Signal();
-            if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPRECVTASK_NAME, "Error in MsgSem.Signal()");
+            ret = RequestSem.Signal();
+            if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPRECVTASK_NAME, "Error in RequestSem.Signal()");
 
             ret = if_task->Sleep(100 * WF_TIME_ONE_MS);
             if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPRECVTASK_NAME, "Error in if_task->Sleep()");
 
 //            else
 //            {
-//                KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPRECVTASK_NAME, "Unable to lock MSGSEM");
+//                KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPRECVTASK_NAME, "Unable to lock RequestSem");
 //            }
         }
     }
@@ -199,12 +199,11 @@ void TcpSend::rt_thread_handler()
     /*
     * aggiornamento interfaccia grafica (control -> grafic)
     */
-    int ret;
-    int n;
+    int ret;    
 
     /* task initialization */
     if_task = WF::Task::GetInstance();
-    if ((ret=if_task->CreateSync(TCPSENDTASK_NAME, TCPSEND_SAMPLETIME, WF_TASK_TYPE_USER)) != WF_RV_OK){
+    if ((ret = if_task->CreateSync(TCPSENDTASK_NAME, TCPSEND_SAMPLETIME, WF_TASK_TYPE_USER)) != WF_RV_OK){
         KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPSENDTASK_NAME, "CreateSync fallita. (valore ritorno %d)", ret);
         WF::Task::Exit();
     }
@@ -216,7 +215,19 @@ void TcpSend::rt_thread_handler()
 
     while (if_task->Continue() && !GLOBALSTOP){
         //inviare dati alla maixbox grafica
-        if(TcpActive) n = write(newsockfd,&Status,sizeof(SystemStatus));
+
+        ret = StatusSem.Wait();
+        if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPSENDTASK_NAME, "Error in StatusSem.Wait()");
+
+        if(TcpActive)
+        {
+            ret = write(newsockfd,&Status,sizeof(SystemStatus));
+            if(ret != sizeof(SystemStatus)) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPSENDTASK_NAME, "Error in writing status message");
+        }
+
+        ret = StatusSem.Signal();
+        if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPSENDTASK_NAME, "Error in StatusSem.Signal()");
+
         if_task->WaitPeriod();
 
     }

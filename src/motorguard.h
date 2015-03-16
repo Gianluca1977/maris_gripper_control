@@ -9,25 +9,16 @@
 
 #define CURRENT_THRESHOLD   2000
 
-#define CHECK_ALL_MOTORS(instuctions)\
-    for(motor_index = 0; motor_index < NUM_MOT; motor_index++)\
-    {\
-        instructions;\
-    }\
-
 // structure to hold event data passed into state machine
 struct MotorGuardData : public EventData
 {
 
 };
 
-class MotorGuard : public StateMachine
+class MotorGuard : public StateMachine, public Motor
 {
-    int motor_index;
+    bool overloaded;
 
-    bool overloaded[NUM_MOT];
-
-    Motor *GripperMotors;
     static Timer guardTimer;
 
     // state machine state functions
@@ -53,14 +44,13 @@ class MotorGuard : public StateMachine
     };
 
 public:
-    MotorGuard();
-    MotorGuard(Motor (&motor)[NUM_MOT]);
+    MotorGuard();    
+    MotorGuard(int id);
+    ~MotorGuard();
 
-    void init(Motor *motor){GripperMotors = motor;}
-
-    void timerExpired(void);
-    void reset(void);
-    void update(void);
+    void guardTimerExpired(void);
+    void resetGuard(void);
+    void updateGuard(void);
 };
 
 #endif // MOTORGUARD_H

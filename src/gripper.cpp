@@ -2,9 +2,7 @@
 #include "controller.h"
 #include <iostream>
 
-#define PI 3.14
-
-Motor Gripper::Motors[NUM_MOT];
+MotorGuard Gripper::Motors[NUM_MOT];
 int Gripper::jointReduction;
 int Gripper::safeJointOffset;
 

@@ -41,9 +41,9 @@ public:
     Timer();
     Timer(long long expire_time);
 
-    void Init(long long expire_time);
+    void init(long long expire_time);
 
-    void Update(void);
+    void update(void);
 
     bool Start(void);
     bool Start(TimerData*);

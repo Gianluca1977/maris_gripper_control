@@ -16,8 +16,7 @@
 MotorConfigurator CtrlHandler::configurator = MotorConfigurator();
 Timer CtrlHandler::configuratorTimer = Timer();
 
-MotorConfigurator CtrlHandler::guard = MotorGuard();
-Timer CtrlHandler::guardTimer = Timer();
+MotorGuard CtrlHandler::guard = MotorGuard();
 
 WF::Thread CtrlHandler::if_thread;
 WF::Task* CtrlHandler::if_task;
@@ -29,12 +28,12 @@ WF::BinarySemaphore CtrlHandler::S3;
 
 CtrlHandler::CtrlHandler() : StateMachine(CtrlHandler::ST_MAX_STATES), Gripper(nodeIds)//, Configurator(Motors)
 {
-    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Calling Constructor of %p", this);
+    //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Calling Constructor of %p", this);
 
-    configurator.Init(Motors);
-    configuratorTimer.Init(INIT_PHASEDELAY);
+    configurator.init(Motors);
+    configuratorTimer.init(INIT_PHASEDELAY);
 
-    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Address of configurator = %p", &configurator);
+    //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Address of configurator = %p", &configurator);
 
 #ifdef ROS_IF
 
@@ -57,13 +56,17 @@ CtrlHandler::CtrlHandler() : StateMachine(CtrlHandler::ST_MAX_STATES), Gripper(n
         }
     }
 
-    ret = MsgSem.Create("MSGSEM", 1);
+    ret = RequestSem.Create("RQSSEM", 1);
     if (ret != WF_RV_OK){
-        KAL::DebugConsole::Write(LOG_LEVEL_ERROR, CONTROLTASK_NAME, "Unable to create MSGSEM");\
+        KAL::DebugConsole::Write(LOG_LEVEL_ERROR, CONTROLTASK_NAME, "Unable to create RQSSEM");\
     }
 
+    ret = StatusSem.Create("STSSEM", 1);
+    if (ret != WF_RV_OK){
+        KAL::DebugConsole::Write(LOG_LEVEL_ERROR, CONTROLTASK_NAME, "Unable to create STSSEM");\
+    }
 
-    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Calling thread_func");\
+    //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Calling thread_func");\
     //if_thread.Create(thread_func, this);
     if_thread.Create(rt_thread_handler, this);
 }
@@ -71,19 +74,10 @@ CtrlHandler::CtrlHandler() : StateMachine(CtrlHandler::ST_MAX_STATES), Gripper(n
 CtrlHandler::~CtrlHandler()
 {
     if_thread.Join();
-    MsgSem.Release();
+    RequestSem.Release();
+    StatusSem.Release();
     //DEBUG("%s thread joined\n",get_label());
 }
-Timer CtrlHandler::getGuardTimer()
-{
-    return guardTimer;
-}
-
-void CtrlHandler::setGuardTimer(const Timer &value)
-{
-    guardTimer = value;
-}
-
 
 void CtrlHandler::ST_Start_Controller()
 {
@@ -101,7 +95,7 @@ void CtrlHandler::ST_Wait_Configuration()
         send_sync_msg();
     }
 
-    configuratorTimer.Update(); // calling within ST_WAIT_CONFIGURATION
+    configuratorTimer.update(); // calling within ST_WAIT_CONFIGURATION
     if(configurator.isConfigured())
     {
         KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Motors are Configured");
@@ -121,6 +115,9 @@ void CtrlHandler::ST_Wait_Configuration()
 
 void CtrlHandler::ST_Running()
 {
+    // call motor guard
+    for(int i = 0; i < NUM_MOT; i++) Motors[i].updateGuard();
+
     if(!isOperative() || !configurator.isConfigured())
     {
         KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller in Emergency state");
@@ -128,15 +125,12 @@ void CtrlHandler::ST_Running()
         return;
     }
 
-    // call motor guard
-    guard.update();
-
     int semRet = WF_RV_OK;
     if (armPresent == true) semRet = S3.Wait_If(); //check for operative sem
 
     if(semRet == WF_RV_OK)
     {
-        semRet = MsgSem.Wait_If();
+        semRet = RequestSem.Wait_If();
         if(semRet == WF_RV_OK)
         {
             switch(Request.command)
@@ -216,7 +210,7 @@ void CtrlHandler::ST_Emergency()
 
     if(semRet == WF_RV_OK)
     {
-        semRet = MsgSem.Wait_If();
+        semRet = RequestSem.Wait_If();
         if(semRet == WF_RV_OK)
         {
             switch(Request.command)
@@ -253,7 +247,7 @@ void CtrlHandler::Start()
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
-    END_TRANSITION_MAP(NULL)
+            END_TRANSITION_MAP(NULL)
 }
 
 void CtrlHandler::Update()
@@ -263,7 +257,7 @@ void CtrlHandler::Update()
             TRANSITION_MAP_ENTRY(ST_WAIT_CONFIGURATION)
             TRANSITION_MAP_ENTRY(ST_RUNNING)
             TRANSITION_MAP_ENTRY(ST_EMERGENCY)
-    END_TRANSITION_MAP(NULL)
+            END_TRANSITION_MAP(NULL)
 }
 
 void CtrlHandler::Recover()
@@ -273,14 +267,14 @@ void CtrlHandler::Recover()
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
             TRANSITION_MAP_ENTRY(ST_START_CONTROLLER)
-     END_TRANSITION_MAP(NULL)
+            END_TRANSITION_MAP(NULL)
 }
 
 void CtrlHandler::resetCommand()
 {
     Request.command = DO_NOTHING;
-    int semRet = MsgSem.Signal();
-    if(semRet != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, CONTROLTASK_NAME, "Error in MsgSem.Signal()");
+    int semRet = RequestSem.Signal();
+    if(semRet != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, CONTROLTASK_NAME, "Error in RequestSem.Signal()");
 }
 
 void* CtrlHandler::rt_thread_handler(void *p)
@@ -356,13 +350,15 @@ void* CtrlHandler::rt_thread_handler(void *p)
     returnValue = (void *) WF_RV_OK;
 }
 
-PubJointState::PubJointState() : Gripper(nodeIds), RosInterface(argc, argv, nodeName)
+PubJointState::PubJointState() : Gripper(nodeIds)
 {
     if_thread.Create(thread_func, this);
 }
 
 void PubJointState::rt_thread_handler()
 {       
+    int semRet;
+
     if_task = WF::Task::GetInstance();
 
     // Init call for a synchronous task
@@ -381,28 +377,27 @@ void PubJointState::rt_thread_handler()
 
     while(if_task->Continue())
     {
-        // read and publish joint angles and velocities
-        for(unsigned int i=0; i < NUM_MOT; i++)
+        semRet = RequestSem.Wait_If();
+        if(semRet == WF_RV_OK)
         {
-            /* aggiorna dati interfaccia */
-            Status.Velocity[i] = Motors[i].Velocity;
-            Status.Position[i] = Motors[i].Position;
-            Status.Current[i] = Motors[i].Current;
-            Status.Control[i] = Motors[i].Control;
-            Status.MotorFault[i] = Motors[i].Fault;
-            Status.MaxPosGrad[i] = Motors[i].MaxPosGrad;
-            Status.State[i] = Motors[i].State;
-            Status.Operational[i] = Motors[i].Operational;
-            Status.emerg_stop = emerg_stop;
-            Status.lastCommandAccomplished = commandExecuted();
-
-#ifdef ROS_IF
-            if(rosOk())
+            // read and publish joint angles and velocities
+            for(unsigned int i=0; i < NUM_MOT; i++)
             {
-                rosPublish();
-                rosSpinOnce();
+                /* aggiorna dati interfaccia */
+                Status.Velocity[i] = Motors[i].Velocity;
+                Status.Position[i] = Motors[i].Position;
+                Status.Current[i] = Motors[i].Current;
+                Status.Control[i] = Motors[i].Control;
+                Status.MotorFault[i] = Motors[i].Fault;
+                Status.MaxPosGrad[i] = Motors[i].MaxPosGrad;
+                Status.State[i] = Motors[i].State;
+                Status.Operational[i] = Motors[i].Operational;
+                Status.emerg_stop = emerg_stop;
+                Status.lastCommandAccomplished = commandExecuted();
             }
-#endif
+
+            semRet = StatusSem.Signal();
+            if(semRet != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, PUBJSTASK_NAME, "Error in StatusSem.Signal()");
         }
 
         if_task->WaitPeriod();

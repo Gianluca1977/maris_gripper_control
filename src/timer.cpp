@@ -5,25 +5,25 @@
 
 Timer::Timer() : timeout(0), StateMachine(Timer::ST_MAX_STATES)
 {
-    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "TIMER", "Calling Default Constructor of %p", this);
+    //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "TIMER", "Calling Default Constructor of %p", this);
     Reset();
 }
 
 Timer::Timer(long long expire_time) : timeout(expire_time), StateMachine(Timer::ST_MAX_STATES)
 {
-    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "TIMER", "Calling Constructor of %p", this);
+    //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "TIMER", "Calling Constructor of %p", this);
     Reset();
 }
 
-void Timer::Init(long long expire_time)
+void Timer::init(long long expire_time)
 {
-    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "TIMER", "Calling Init of %p", this);
+    //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "TIMER", "Calling Init of %p", this);
 
     timeout = expire_time;
     Reset();
 }
 
-void Timer::Update()
+void Timer::update()
 {
     BEGIN_TRANSITION_MAP                   // - Current State -
         TRANSITION_MAP_ENTRY (ST_IDLE)     // ST_Idle

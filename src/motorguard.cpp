@@ -2,28 +2,24 @@
 
 Timer MotorGuard::guardTimer = Timer();
 
-MotorGuard::MotorGuard() : StateMachine(MotorConfigurator::ST_MAX_STATES), motor_index(0), overloaded({false, false, false})
+MotorGuard::MotorGuard() : StateMachine(MotorGuard::ST_MAX_STATES), overloaded(false)
 {
-    guardTimer.Init(GUARD_DELAY);
+    guardTimer.init(GUARD_DELAY);
 }
 
-MotorGuard::MotorGuard(Motor (&motor)[]) : StateMachine(MotorConfigurator::ST_MAX_STATES), GripperMotors(motor), motor_index(0), overloaded({false, false, false})
+MotorGuard::MotorGuard(int id) : StateMachine(MotorGuard::ST_MAX_STATES), Motor(id), overloaded(false)
 {
-    guardTimer.Init(GUARD_DELAY);
+    guardTimer.init(GUARD_DELAY);
 }
 
 void MotorGuard::ST_Idle()
 {
-    CHECK_ALL_MOTORS(if(Motors[motor_index].Current > CURRENT_THRESHOLD) overloaded[motor_index] = true;)
-
-    CHECK_ALL_MOTORS(
-        if(overloaded[motor_index])
-        {
-            guardTimer.Start();
-            InternalEvent(ST_WARNING);
-            return;
-        }
-    )
+    if(Current > CURRENT_THRESHOLD)
+    {
+        overloaded = true;
+        guardTimer.Start();
+        InternalEvent(ST_WARNING);
+    }
 }
 
 void MotorGuard::ST_Warning()
@@ -34,28 +30,24 @@ void MotorGuard::ST_Warning()
         return;
     }
 
-    CHECK_ALL_MOTORS(if(Motors[motor_index].Current < CURRENT_THRESHOLD) overloaded[motor_index] = false;)
-
-    CHECK_ALL_MOTORS(if(overloaded[motor_index]) return;)
-
-    InternalEvent(ST_IDLE);
+    if(Current <= CURRENT_THRESHOLD)
+    {
+        overloaded = false;
+        InternalEvent(ST_IDLE);
+    }
 }
 
 void MotorGuard::ST_Overload()
-{
-    CHECK_ALL_MOTORS(
-        if(overloaded[motor_index])
-        {
-            GripperMotors[motor_index].stop();
-            GripperMotors[motor_index].disable();
-            GripperMotors[motor_index].Operational = false;
-        }
-    )
-
-    InternalEvent(ST_IDLE);
+{    
+    if(overloaded)
+    {
+        stop();
+        disable();
+        Operational = false;
+    }
 }
 
-void MotorGuard::timerExpired()
+void MotorGuard::guardTimerExpired()
 {
     BEGIN_TRANSITION_MAP
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
@@ -64,9 +56,9 @@ void MotorGuard::timerExpired()
     END_TRANSITION_MAP(NULL)
 }
 
-void MotorGuard::reset()
+void MotorGuard::resetGuard()
 {
-    CHECK_ALL_MOTORS(overloaded[motor_index] = false;)
+    overloaded = false;
 
     BEGIN_TRANSITION_MAP
             TRANSITION_MAP_ENTRY(EVENT_IGNORED)
@@ -75,11 +67,17 @@ void MotorGuard::reset()
     END_TRANSITION_MAP(NULL)
 }
 
-void MotorGuard::update()
+void MotorGuard::updateGuard()
 {
     BEGIN_TRANSITION_MAP
             TRANSITION_MAP_ENTRY(ST_IDLE)
             TRANSITION_MAP_ENTRY(ST_WARNING)
             TRANSITION_MAP_ENTRY(ST_OVERLOAD)
     END_TRANSITION_MAP(NULL)
+}
+
+
+MotorGuard::~MotorGuard()
+{
+
 }

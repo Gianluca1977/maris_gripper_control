@@ -25,12 +25,56 @@ RosInterface::RosInterface(int argc, char** argv, std::string name) : nodeName(n
     ros_service_shape = nh.advertiseService("gripper/shape", &RosInterface::selectShape, this);
 
     actionInterface = new ShapeActionInterface(nh, "gripper/actionshape");
+
+    if_thread.Create(thread_func, this);
 #endif
 }
 
 RosInterface::~RosInterface()
 {
 
+}
+
+void RosInterface::rt_thread_handler()
+{
+    int ret;
+
+    /* task initialization */
+    if_task = WF::Task::GetInstance();
+    if ((ret = if_task->CreateSync(ROS_INTERFACE_NAME, ROS_INTERFACE_SAMPLETIME, WF_TASK_TYPE_USER)) != WF_RV_OK){
+        KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "CreateSync fallita. (valore ritorno %d)", ret);
+        WF::Task::Exit();
+    }
+
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, ROS_INTERFACE_NAME, "%s Created %d", ROS_INTERFACE_NAME, sizeof(SystemStatus));
+
+    if_task->SetReadyUntilPostInit();
+    if_task->WaitRunning();
+
+    while (if_task->Continue() && !GLOBALSTOP){
+        //inviare dati alla maixbox grafica
+
+        ret = StatusSem.Wait();
+        if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in StatusSem.Wait()");
+
+        if(rosOk())
+        {
+            rosPublish();
+            rosSpinOnce();
+        }
+
+        ret = StatusSem.Signal();
+        if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in StatusSem.Signal()");
+
+        if_task->WaitPeriod();
+
+    }
+    // Enable this if your task was Hard Real Time
+    // delete Status;
+    if_task->Release();
+    WF::Task::Exit();
+
+    returnValue = (void *) WF_RV_OK;
 }
 
 void RosInterface::rosSpinOnce()
@@ -49,7 +93,7 @@ void RosInterface::rosPublish()
     gripper_control::GripperJointVelocity rosJointVelocity;
     gripper_control::GripperStatus rosStatus;
 
-    rosStatus.status = 0xFFFF;
+    rosStatus.status = -1;
 
     for(int i = 0; i < NUM_MOT; i++)
     {
@@ -65,14 +109,16 @@ void RosInterface::rosPublish()
 
 bool RosInterface::selectShape(gripper_control::GripperSelectShape::Request &req, gripper_control::GripperSelectShape::Response &res)
 {
-    int ret = MsgSem.Wait();
-    if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in MsgSem.Signal()");
+    int ret = RequestSem.Wait();
+    if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in RequestSem.Signal()");
 
     Request.command = PRESHAPE;
     Request.preshape = req.shape;
 
-    ret = MsgSem.Signal();
-    if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in MsgSem.Signal()");
+    ret = RequestSem.Signal();
+    if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in RequestSem.Signal()");
+
+    res.result = req.shape;
 
     // non necessario nell'interfaccia ROS
     /*
@@ -94,14 +140,14 @@ void ShapeActionInterface::executeCB(const gripper_control::GripperSelectShapeGo
     // publish info to the console for the user
     ROS_INFO("%s: Executing, moving to shape %i", nodeName.c_str(), goal->shape);
 
-    int ret = MsgSem.Wait();
-    if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in MsgSem.Signal()");
+    int ret = RequestSem.Wait();
+    if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in RequestSem.Signal()");
 
     Request.command = PRESHAPE;
     Request.preshape = goal->shape;
 
-    ret = MsgSem.Signal();
-    if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in MsgSem.Signal()");
+    ret = RequestSem.Signal();
+    if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in RequestSem.Signal()");
 
     // start executing the action
     while(!Status.lastCommandAccomplished)

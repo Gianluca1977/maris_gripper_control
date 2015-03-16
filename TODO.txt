@@ -4,7 +4,7 @@
 
 - Implementare action ROS selezione shape -> DA TESTARE
 
-- Implementare controllo limitazione tempo/corrente(Ampere)
+- Implementare controllo limitazione tempo/corrente(Ampere) -> DA TESTARE
 
 - Implementare homing
 

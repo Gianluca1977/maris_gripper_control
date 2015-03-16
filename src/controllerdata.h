@@ -18,7 +18,8 @@ public:
     static char** argv;
     static std::string nodeName;
 
-    static WF::BinarySemaphore MsgSem;
+    static WF::BinarySemaphore RequestSem;
+    static WF::BinarySemaphore StatusSem;
 
     static int nodeIds[NUM_MOT];
 

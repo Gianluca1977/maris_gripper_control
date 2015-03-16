@@ -82,7 +82,7 @@
 #define SRV_MODE_HOMING		3
 #define SRV_MODE_TACTILE_OFFSET	4
 
-class PubJointState : virtual public CanDriver, virtual public Gripper, virtual public ControllerData, virtual public Supervisor, virtual public TcpData, private rt_thread, virtual public RosInterface
+class PubJointState : virtual public CanDriver, virtual public Gripper, virtual public ControllerData, virtual public Supervisor, virtual public TcpData, private rt_thread
 {
 public:
     PubJointState();
@@ -105,7 +105,6 @@ public:
     static Timer configuratorTimer;
 
     static MotorGuard guard;
-    static Timer guardTimer;
 
     static WF::BinarySemaphore S1;
     static WF::BinarySemaphore S2;
@@ -149,7 +148,7 @@ private:
 };
 
 /* Gripper Controller Class */
-class Controller : virtual public CtrlHandler, virtual public PubJointState, virtual public TcpSend, virtual public TcpReceive
+class Controller : virtual public CtrlHandler, virtual public PubJointState, virtual public TcpSend, virtual public TcpReceive, virtual public RosInterface
 {
 public:
     Controller(int arg_c, char** arg_v, std::string node_Name);

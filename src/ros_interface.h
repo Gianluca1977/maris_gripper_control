@@ -3,6 +3,8 @@
 
 #include "interface_data.h"
 #include "tcp_interface.h"
+#include "rt_thread.h"
+#include "wf.h"
 
 // ROS includes
 #include <ros/ros.h>
@@ -22,10 +24,11 @@
 #include <gripper_control/GripperSelectShapeAction.h>
 
 #define ROS_INTERFACE_NAME "ROS_INTERFACE"
+#define ROS_INTERFACE_SAMPLETIME    (500 * WF_TIME_ONE_MS)
 
 class ShapeActionInterface;
 
-class RosInterface : virtual protected TcpData
+class RosInterface : virtual protected TcpData, virtual protected Supervisor, private rt_thread
 {
 public:
     RosInterface(int argc, char** argv, std::string name);
@@ -35,7 +38,8 @@ public:
     bool rosOk();
     void rosPublish();
 
-private:
+private:    
+    void rt_thread_handler(void);
 
     // declaration of topics to publish
     ros::Publisher ros_publisher_pos;
