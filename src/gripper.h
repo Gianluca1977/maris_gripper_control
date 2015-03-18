@@ -19,8 +19,17 @@ public:
     void disableMotors();
     void enableMotors();
 
+    void updateGuard();
+    void emergencyStop();
+
     void stop();
     bool checkStopped();
+
+    void movePosAbs(int64_t req_pos[NUM_MOT]);
+    void moveVel(int64_t req_vel[NUM_MOT]);
+    void goFinalPos(bool motor_selection[NUM_MOT]);
+    void setHomePos(bool motor_selection[NUM_MOT]);
+    void setFinalPos(bool motor_selection[NUM_MOT]);
 
     bool isOperative();
 

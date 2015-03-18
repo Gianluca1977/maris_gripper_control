@@ -23,15 +23,11 @@
 
 static WF::Task *maintask;
 
-int initPhase = INIT_BOOTUP_DEV;
+//int initPhase = INIT_BOOTUP_DEV;
 
 void main_shutdown(Controller* gripper){
     maintask->GotoSoft();
     maintask->Release();
-
-#ifdef ROS_IF
-    //delete gripper->rosInter;
-#endif
 
     delete gripper;
 }
@@ -40,10 +36,6 @@ void main_shutdown()
 {
     maintask->GotoSoft();
     maintask->Release();
-
-#ifdef ROS_IF
-    //delete gripper->rosInter;
-#endif
 }
 
 int main(int argc, char** argv)

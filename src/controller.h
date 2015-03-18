@@ -104,8 +104,6 @@ public:
     static MotorConfigurator configurator;
     static Timer configuratorTimer;
 
-    static MotorGuard guard;
-
     static WF::BinarySemaphore S1;
     static WF::BinarySemaphore S2;
     static WF::BinarySemaphore S3;

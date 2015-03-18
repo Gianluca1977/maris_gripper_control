@@ -26,7 +26,7 @@ RosInterface::RosInterface(int argc, char** argv, std::string name) : nodeName(n
 
     actionInterface = new ShapeActionInterface(nh, "gripper/actionshape");
 
-    if_thread.Create(thread_func, this);
+    rt_thread_create();
 #endif
 }
 

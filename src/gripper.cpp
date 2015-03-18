@@ -46,6 +46,16 @@ void Gripper::enableMotors()
     for(int i = 0; i < NUM_MOT; i++) Motors[i].enable();
 }
 
+void Gripper::updateGuard()
+{
+    for(int i = 0; i < NUM_MOT; i++) Motors[i].updateGuard();
+}
+
+void Gripper::emergencyStop()
+{
+    for(int i = 0; i < NUM_MOT; i++) do Motors[i].emergencyStop(); while((Motors[i].State & STATUS_WORD_MASK) == SWITCH_ON_DISABLED);
+}
+
 bool Gripper::isOperative()
 {
     for(int i = 0; i < NUM_MOT; i++) if(!Motors[i].Operational) return false;
@@ -67,6 +77,31 @@ bool Gripper::checkStopped()
 {
     for(int i = 0; i < NUM_MOT; i++) if(!Motors[i].checkStopped()) return false;
     return true;
+}
+
+void Gripper::movePosAbs(int64_t req_pos[])
+{
+    for(int i = 0; i < NUM_MOT; i++) Motors[i].movePosAbs(req_pos[i]*jointReduction/360);
+}
+
+void Gripper::moveVel(int64_t req_vel[])
+{
+    for(int i = 0; i < NUM_MOT; i++) Motors[i].moveVel(req_vel[i]);
+}
+
+void Gripper::goFinalPos(bool motor_selection[])
+{
+    for(int i = 0; i < NUM_MOT; i++) if(motor_selection[i]) Motors[i].movePosAbs(Motors[i].MaxPosGrad*jointReduction/360);
+}
+
+void Gripper::setHomePos(bool motor_selection[])
+{
+    for(int i = 0; i < NUM_MOT; i++) if(motor_selection[i]) Motors[i].setHomePosition();
+}
+
+void Gripper::setFinalPos(bool motor_selection[])
+{
+    for(int i = 0; i < NUM_MOT; i++) if(motor_selection[i]) Motors[i].MaxPosGrad = Motors[i].PositionGrad;
 }
 
 // Update Motors States

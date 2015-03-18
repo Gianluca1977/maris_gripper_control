@@ -114,9 +114,10 @@ void CtrlHandler::ST_Wait_Configuration()
 }
 
 void CtrlHandler::ST_Running()
-{
+{    
+
     // call motor guard
-    for(int i = 0; i < NUM_MOT; i++) Motors[i].updateGuard();
+    updateGuard();
 
     if(!isOperative() || !configurator.isConfigured())
     {
@@ -141,7 +142,7 @@ void CtrlHandler::ST_Running()
             case RECOVER:
                 resetCommand();
                 KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Controller in driven in Emergency state by user request");
-                for(int i = 0; i < NUM_MOT; i++) do Motors[i].emergencyStop(); while((Motors[i].State & STATUS_WORD_MASK) == SWITCH_ON_DISABLED);
+                emergencyStop();
                 InternalEvent(ST_EMERGENCY);
                 return;
                 break;
@@ -151,33 +152,33 @@ void CtrlHandler::ST_Running()
                 break;
             case GO_POSITION:
                 resetCommand();
-                for(int i = 0; i < NUM_MOT; i++) Motors[i].movePosAbs(Request.req_pos[i]*jointReduction/360);
+                movePosAbs(Request.req_pos);
                 Status.lastCommandAccomplished = false;
                 break;
             case GO_FINAL_POS:
                 resetCommand();
-                for(int i = 0; i < NUM_MOT; i++) if(Request.motor_selection[i]) Motors[i].movePosAbs(Motors[i].MaxPosGrad*jointReduction/360);
+                goFinalPos(Request.motor_selection);
                 Status.lastCommandAccomplished = false;
                 break;
             case GO_VELOCITY:
                 resetCommand();
-                for(int i = 0; i < NUM_MOT; i++) Motors[i].moveVel(Request.req_vel[i]);
+                moveVel(Request.req_vel);
                 Status.lastCommandAccomplished = false;
                 break;
             case SET_INIT_POS:
                 resetCommand();
-                for(int i = 0; i < NUM_MOT; i++) if(Request.motor_selection[i]) Motors[i].setHomePosition();
+                setHomePos(Request.motor_selection);
                 break;
             case SET_FINAL_POS:
                 resetCommand();
-                for(int i = 0; i < NUM_MOT; i++) if(Request.motor_selection[i]) Motors[i].MaxPosGrad = Motors[i].PositionGrad;
+                setFinalPos(Request.motor_selection);
                 break;
             case PRESHAPE:
                 resetCommand();
                 KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Preshape request %d", Request.preshape);
                 if(Request.preshape >= 0 && Request.preshape < finger_conf_num)
                 {
-                    for(int i = 0; i < NUM_MOT; i++) Motors[i].movePosAbs(finger_confs[Request.preshape][i]*jointReduction/360);
+                    movePosAbs(finger_confs[Request.preshape]);
                     Status.lastCommandAccomplished = false;
                 }
                 else KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Preshape request out of range");
@@ -352,7 +353,7 @@ void* CtrlHandler::rt_thread_handler(void *p)
 
 PubJointState::PubJointState() : Gripper(nodeIds)
 {
-    if_thread.Create(thread_func, this);
+    rt_thread_create();
 }
 
 void PubJointState::rt_thread_handler()

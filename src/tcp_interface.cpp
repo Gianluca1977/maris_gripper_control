@@ -41,7 +41,7 @@ TcpReceive::TcpReceive()
     }
 
     //KAL::DebugConsole::Write(LOG_LEVEL_INFO, TCPRECVTASK_NAME, "Before creating TcpReceive");
-    if_thread.Create(thread_func, this);
+    rt_thread_create();
 }
 
 TcpSend::TcpSend()
@@ -54,14 +54,11 @@ TcpSend::TcpSend()
     Status.actCycle = 0;
 
     //KAL::DebugConsole::Write(LOG_LEVEL_INFO, TCPSENDTASK_NAME, "Before creating TcpSend");
-    if_thread.Create(thread_func, this);
+    rt_thread_create();
 }
 
 void TcpReceive::rt_thread_handler()
 {
-    /*
-    *  aggiornamento interfaccia grafica (grafic -> control)
-    */
     int ret;
 
     /* task initialization */
@@ -75,9 +72,6 @@ void TcpReceive::rt_thread_handler()
     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TCPRECVTASK_NAME, "TcpReceive Created on port %d", port);
 
     if_task->SetReadyUntilPostInit();
-
-    /* ************************* */
-
     if_task->WaitRunning();
 
     TcpActive = false;
