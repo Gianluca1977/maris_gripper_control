@@ -16,8 +16,6 @@
 MotorConfigurator CtrlHandler::configurator = MotorConfigurator();
 Timer CtrlHandler::configuratorTimer = Timer();
 
-MotorGuard CtrlHandler::guard = MotorGuard();
-
 WF::Thread CtrlHandler::if_thread;
 WF::Task* CtrlHandler::if_task;
 void* CtrlHandler::returnValue;
@@ -194,7 +192,7 @@ void CtrlHandler::ST_Running()
                 break;
             case SET_HOME:
                 resetCommand();
-                for(int i = 0; i < NUM_MOT; i++) Motors[i].setHomePosition();
+                setHomePos();
                 break;
             default:
                 resetCommand();

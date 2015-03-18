@@ -84,6 +84,11 @@ void Gripper::movePosAbs(int64_t req_pos[])
     for(int i = 0; i < NUM_MOT; i++) Motors[i].movePosAbs(req_pos[i]*jointReduction/360);
 }
 
+void Gripper::movePosAbs(double req_pos[])
+{
+    for(int i = 0; i < NUM_MOT; i++) Motors[i].movePosAbs(req_pos[i]*jointReduction/360);
+}
+
 void Gripper::moveVel(int64_t req_vel[])
 {
     for(int i = 0; i < NUM_MOT; i++) Motors[i].moveVel(req_vel[i]);
@@ -97,6 +102,12 @@ void Gripper::goFinalPos(bool motor_selection[])
 void Gripper::setHomePos(bool motor_selection[])
 {
     for(int i = 0; i < NUM_MOT; i++) if(motor_selection[i]) Motors[i].setHomePosition();
+}
+
+void Gripper::setHomePos()
+{
+    bool motor_selection[] = {true, true, true};
+    setHomePos(motor_selection);
 }
 
 void Gripper::setFinalPos(bool motor_selection[])

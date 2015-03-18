@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   message_generation
   actionlib_msgs
+  actionlib
 )
 
 ## System dependencies are found with CMake's conventions
@@ -117,11 +118,11 @@ link_directories(/usr/src/peak-linux-driver-7.4/lib)
 ## Declare a cpp executable
 #add_executable(gripper_control src/main.cpp src/tcp_interface.cpp src/can_driver.cpp)
 #add_executable(gripper_control src/motor_configurator.cpp src/motor_simulator.cpp src/timer.cpp src/main.cpp src/state_machine.cpp src/rt_thread.cpp src/controllerdata.cpp src/supervisor.cpp src/can_driver.cpp src/motor.cpp src/gripper.cpp src/tcp_interface.cpp  src/controller.cpp  src/tcp_interface.cpp )
-add_executable(gripper_control src/ros_interface.cpp src/motor_configurator.cpp src/timer.cpp src/main.cpp src/state_machine.cpp src/main.cpp src/rt_thread.cpp src/controllerdata.cpp src/supervisor.cpp src/can_driver.cpp src/motor.cpp src/gripper.cpp src/tcp_interface.cpp  src/controller.cpp  src/tcp_interface.cpp )
+add_executable(gripper_control src/motorguard.cpp src/ros_interface.cpp src/motor_configurator.cpp src/timer.cpp src/main.cpp src/state_machine.cpp src/main.cpp src/rt_thread.cpp src/controllerdata.cpp src/supervisor.cpp src/can_driver.cpp src/motor.cpp src/gripper.cpp src/tcp_interface.cpp  src/controller.cpp  src/tcp_interface.cpp )
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-add_dependencies(gripper_control gripper_control_generate_messages_cpp gripper_control_gencpp ${gripper_control_EXPORTED_TARGETS)
+add_dependencies(gripper_control gripper_control_generate_messages_cpp gripper_control_gencpp ${gripper_control_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(gripper_control_node

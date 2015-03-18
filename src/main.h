@@ -22,7 +22,7 @@
 #include <unistd.h>
 #include <exception>
 
-#define ROS_IF
+//#define ROS_IF
 
 /* ****** initialization Stuffs ***** */
 

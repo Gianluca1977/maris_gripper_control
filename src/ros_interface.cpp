@@ -24,7 +24,7 @@ RosInterface::RosInterface(int argc, char** argv, std::string name) : nodeName(n
 
     ros_service_shape = nh.advertiseService("gripper/shape", &RosInterface::selectShape, this);
 
-    actionInterface = new ShapeActionInterface(nh, "gripper/actionshape");
+    actionInterface = new ShapeActionInterface(nh, "gripper/actionshape", &Status, &Request);
 
     rt_thread_create();
 #endif
@@ -138,30 +138,30 @@ void ShapeActionInterface::executeCB(const gripper_control::GripperSelectShapeGo
     result_.done = false;
 
     // publish info to the console for the user
-    ROS_INFO("%s: Executing, moving to shape %i", nodeName.c_str(), goal->shape);
+    ROS_INFO("%s: Executing, moving to shape %i", actionName.c_str(), goal->shape);
 
-    int ret = RequestSem.Wait();
-    if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in RequestSem.Signal()");
+    //int ret = RequestSem.Wait();
+    //if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in RequestSem.Signal()");
 
-    Request.command = PRESHAPE;
-    Request.preshape = goal->shape;
+    Request->command = PRESHAPE;
+    Request->preshape = goal->shape;
 
-    ret = RequestSem.Signal();
-    if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in RequestSem.Signal()");
+    //ret = RequestSem.Signal();
+    //if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in RequestSem.Signal()");
 
     // start executing the action
-    while(!Status.lastCommandAccomplished)
+    while(!Status->lastCommandAccomplished)
     {
         // check that preempt has not been requested by the client
         if (as_.isPreemptRequested() || !ros::ok())
         {
-            ROS_INFO("%s: Preempted", nodeName.c_str());
+            ROS_INFO("%s: Preempted", actionName.c_str());
             // set the action state to preempted
             as_.setPreempted();
             success = false;
             break;
         }
-        feedback_.progress = Status.Position[0];
+        feedback_.progress = Status->Position[0];
         // publish the feedback
         as_.publishFeedback(feedback_);
         // this sleep is not necessary, the sequence is computed at 1 Hz for demonstration purposes
@@ -170,8 +170,8 @@ void ShapeActionInterface::executeCB(const gripper_control::GripperSelectShapeGo
 
     if(success)
     {
-        result_.done = Status.lastCommandAccomplished;
-        ROS_INFO("%s: Succeeded", nodeName.c_str());
+        result_.done = Status->lastCommandAccomplished;
+        ROS_INFO("%s: Succeeded", actionName.c_str());
         // set the action state to succeeded
         as_.setSucceeded(result_);
     }

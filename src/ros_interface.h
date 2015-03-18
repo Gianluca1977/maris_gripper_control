@@ -59,10 +59,10 @@ protected:
     ShapeActionInterface* actionInterface;
 };
 
-class ShapeActionInterface : virtual protected TcpData
+class ShapeActionInterface
 {
 public:
-    ShapeActionInterface(ros::NodeHandle &nh, std::string name) : as_(nh, name, boost::bind(&ShapeActionInterface::executeCB, this, _1), false), actionName(name), nh_(nh)
+    ShapeActionInterface(ros::NodeHandle &nh, std::string name, SystemStatus* status, SystemRequest *request) : as_(nh, name, boost::bind(&ShapeActionInterface::executeCB, this, _1), false), actionName(name), nh_(nh), Status(status), Request(request)
     {
         as_.start();
     }
@@ -76,6 +76,9 @@ public:
     void executeCB(const gripper_control::GripperSelectShapeGoalConstPtr &goal);
 
 protected:
+
+    SystemStatus* Status;
+    SystemRequest* Request;
 
     ros::NodeHandle nh_;
 
