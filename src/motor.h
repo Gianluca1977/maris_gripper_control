@@ -43,7 +43,7 @@ public:
     };
 
     double Velocity;	//last found vel
-    long Position;	//last found pos
+    double Position;	//last found pos
     long Current;
     long Control;
     double PositionGrad;

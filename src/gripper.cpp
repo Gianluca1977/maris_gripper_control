@@ -2,7 +2,12 @@
 #include "controller.h"
 #include <iostream>
 
+#ifdef MOTOR_GUARD
 MotorGuard Gripper::Motors[NUM_MOT];
+#else
+Motor Gripper::Motors[NUM_MOT];
+#endif
+
 int Gripper::jointReduction;
 int Gripper::safeJointOffset;
 
@@ -136,7 +141,7 @@ void Gripper::updateStates(TPCANMsg msg) {
                 Motors[i].Current = (tmp_curr << 8) + msg.DATA[4];
 
                 Motors[i].PositionGrad = pcanData2Double(msg,0)*360/jointReduction;
-                Motors[i].Position = Motors[i].PositionGrad*PI/180;
+                Motors[i].Position = ((double) Motors[i].PositionGrad)*PI/180.0;
 
                 long long actualTime = llround(KAL::GetTime());
                 Motors[i].Velocity = (Motors[i].Position - Motors[i].OldPosition)/((actualTime - Motors[i].updateTime)*1E-9);

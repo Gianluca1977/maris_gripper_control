@@ -370,7 +370,7 @@ void PubJointState::rt_thread_handler()
 
     while(if_task->Continue())
     {
-        semRet = RequestSem.Wait_If();
+        semRet = StatusSem.Wait_If();
         if(semRet == WF_RV_OK)
         {
             // read and publish joint angles and velocities

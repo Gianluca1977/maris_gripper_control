@@ -109,8 +109,11 @@ void RosInterface::rosPublish()
 
 bool RosInterface::selectShape(gripper_control::GripperSelectShape::Request &req, gripper_control::GripperSelectShape::Response &res)
 {
-    int ret = RequestSem.Wait();
-    if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in RequestSem.Signal()");
+    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, ROS_INTERFACE_NAME, "Calling RosInterface::selectShape service with request %d", req.shape);
+
+    int ret;
+    //ret = RequestSem.Wait();
+    //if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in RequestSem.Signal()");
 
     Request.command = PRESHAPE;
     Request.preshape = req.shape;
@@ -125,6 +128,7 @@ bool RosInterface::selectShape(gripper_control::GripperSelectShape::Request &req
     ret =  if_task->Sleep(100 * WF_TIME_ONE_MS);
     if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in if_task->Sleep()");
     */
+    return true;
 }
 
 void ShapeActionInterface::executeCB(const gripper_control::GripperSelectShapeGoalConstPtr &goal)

@@ -121,11 +121,12 @@ void TcpReceive::rt_thread_handler()
             }
         }
 
-        if(TcpActive){
-            KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TCPRECVTASK_NAME, "Waiting for incoming TCP data");
+        if(TcpActive){            
 
             ret = RequestSem.Wait();
             if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPRECVTASK_NAME, "Error in RequestSem.Signal()");
+
+            KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TCPRECVTASK_NAME, "Waiting for incoming TCP data");
 
             ret = read(newsockfd,&Request,sizeof(SystemRequest));
 
