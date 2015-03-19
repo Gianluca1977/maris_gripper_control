@@ -64,8 +64,9 @@ protected:
 class ShapeActionInterface
 {
 public:
-    ShapeActionInterface(ros::NodeHandle &nh, std::string name, SystemStatus* status, SystemRequest *request) : as_(nh, name, boost::bind(&ShapeActionInterface::executeCB, this, _1), false), actionName(name), nh_(nh), Status(status), Request(request)
+    ShapeActionInterface(ros::NodeHandle &nh, std::string name, SystemStatus* status, SystemRequest *request, WF::BinarySemaphore* sem) : as_(nh, name, boost::bind(&ShapeActionInterface::executeCB, this, _1), false), actionName(name), nh_(nh), Status(status), Request(request), RequestSem(sem)
     {
+        ros_service_shape_client = nh.serviceClient<gripper_control::GripperSelectShape>("gripper/shape");
         as_.start();
     }
 
@@ -81,8 +82,12 @@ protected:
 
     SystemStatus* Status;
     SystemRequest* Request;
+    WF::BinarySemaphore* RequestSem;
 
     ros::NodeHandle nh_;
+
+    ros::ServiceClient ros_service_shape_client;
+    gripper_control::GripperSelectShape srv;
 
     std::string actionName;
 

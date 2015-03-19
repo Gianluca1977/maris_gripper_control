@@ -19,7 +19,8 @@ SOURCES += \
     src/motor_simulator.cpp \
     src/timer.cpp \
     src/motor_configurator.cpp \
-    src/motorguard.cpp
+    src/motorguard.cpp \
+    src/shape_actionclient.cpp
 
 HEADERS += \
     src/can_define.h \

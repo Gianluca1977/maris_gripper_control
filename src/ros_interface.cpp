@@ -24,7 +24,7 @@ RosInterface::RosInterface(int argc, char** argv, std::string name) : nodeName(n
 
     ros_service_shape = nh.advertiseService("gripper/shape", &RosInterface::selectShape, this);
 
-    actionInterface = new ShapeActionInterface(nh, "gripper/actionshape", &Status, &Request);
+    actionInterface = new ShapeActionInterface(nh, "gripper/actionshape", &Status, &Request, &RequestSem);
 
     rt_thread_create();
 #endif
@@ -147,14 +147,27 @@ void ShapeActionInterface::executeCB(const gripper_control::GripperSelectShapeGo
     //int ret = RequestSem.Wait();
     //if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in RequestSem.Signal()");
 
-    Request->command = PRESHAPE;
-    Request->preshape = goal->shape;
+    //Request->command = PRESHAPE;
+    //Request->preshape = goal->shape;
+    srv.request.shape =  goal->shape;
 
-    //ret = RequestSem.Signal();
+    if (ros_service_shape_client.call(srv))
+    {
+        ROS_INFO("Result: %d", srv.response.result);
+    }
+    else
+    {
+        ROS_ERROR("Failed to call service add_two_ints");
+        success = false;
+    }
+
+    //int ret = RequestSem->Signal();
     //if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in RequestSem.Signal()");
 
+    Status->lastCommandAccomplished = false;
+
     // start executing the action
-    while(!Status->lastCommandAccomplished)
+    while(success & !Status->lastCommandAccomplished)
     {
         // check that preempt has not been requested by the client
         if (as_.isPreemptRequested() || !ros::ok())
