@@ -4,11 +4,17 @@
 #include "motorguard.h"
 #include "controllerdata.h"
 
+#define MOTOR_GUARD
+
 class Gripper : virtual public ControllerData
 {
 public:
 
+#ifdef MOTOR_GUARD
     static MotorGuard Motors[NUM_MOT];
+#else
+    static Motor Motors[NUM_MOT];
+#endif
 
     //Gripper();
     Gripper(int []);

@@ -22,8 +22,4 @@
 #include <unistd.h>
 #include <exception>
 
-//#define ROS_IF
-
-/* ****** initialization Stuffs ***** */
-
 #endif // MAIN_H

@@ -31,12 +31,7 @@ CtrlHandler::CtrlHandler() : StateMachine(CtrlHandler::ST_MAX_STATES), Gripper(n
     configurator.init(Motors);
     configuratorTimer.init(INIT_PHASEDELAY);
 
-    //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Address of configurator = %p", &configurator);
-
-#ifdef ROS_IF
-
-#endif        
-
+    //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Address of configurator = %p", &configurator);    
     if(sockTCP.active) TcpActive = true;
     else TcpActive = false;
 
@@ -113,7 +108,6 @@ void CtrlHandler::ST_Wait_Configuration()
 
 void CtrlHandler::ST_Running()
 {    
-
     // call motor guard
     updateGuard();
 

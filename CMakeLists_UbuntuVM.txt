@@ -115,7 +115,7 @@ link_directories(/usr/local/lib)
 
 ## Declare a cpp executable
 #add_executable(gripper_control src/gripper_control.cpp src/RosInterface.cpp src/can_driver.cpp src/tcpServer.cpp src/sensorNN.cpp)
-add_executable(gripper_control src/ros_interface.cpp src/state_machine.cpp src/motor_configurator.cpp src/timer.cpp src/main.cpp src/rt_thread.cpp src/controllerdata.cpp src/supervisor.cpp src/can_driver.cpp src/motor.cpp src/gripper.cpp src/tcp_interface.cpp  src/controller.cpp  src/tcp_interface.cpp )
+add_executable(gripper_control src/motorguard.cpp src/ros_interface.cpp src/state_machine.cpp src/motor_configurator.cpp src/timer.cpp src/main.cpp src/rt_thread.cpp src/controllerdata.cpp src/supervisor.cpp src/can_driver.cpp src/motor.cpp src/gripper.cpp src/tcp_interface.cpp  src/controller.cpp  src/tcp_interface.cpp )
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes

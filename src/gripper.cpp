@@ -48,7 +48,9 @@ void Gripper::enableMotors()
 
 void Gripper::updateGuard()
 {
+#ifdef MOTOR_GUARD
     for(int i = 0; i < NUM_MOT; i++) Motors[i].updateGuard();
+#endif
 }
 
 void Gripper::emergencyStop()
