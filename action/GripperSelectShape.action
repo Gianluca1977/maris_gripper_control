@@ -5,4 +5,4 @@ int8 shape
 bool done
 ---
 #feedback
-float32 progress
+float64[3] progress

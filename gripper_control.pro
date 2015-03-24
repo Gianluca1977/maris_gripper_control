@@ -20,7 +20,8 @@ SOURCES += \
     src/timer.cpp \
     src/motor_configurator.cpp \
     src/motorguard.cpp \
-    src/shape_actionclient.cpp
+    src/shape_actionclient.cpp \
+    src/simulator.cpp
 
 HEADERS += \
     src/can_define.h \
@@ -40,7 +41,8 @@ HEADERS += \
     src/motor_simulator.h \
     src/timer.h \
     src/motor_configurator.h \
-    src/motorguard.h
+    src/motorguard.h \
+    src/simulator.h
 
 OTHER_FILES += \
     TODO.txt

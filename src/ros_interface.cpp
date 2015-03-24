@@ -24,7 +24,7 @@ RosInterface::RosInterface(int argc, char** argv, std::string name) : nodeName(n
 
     ros_service_shape = nh.advertiseService("gripper/shape", &RosInterface::selectShape, this);
 
-    actionInterface = new ShapeActionInterface(nh, "gripper/actionshape", &Status, &Request, &RequestSem);
+    actionInterface = new ShapeActionInterface(nh, "gripper/actionshape", &Status, &Request);
 
     rt_thread_create();
 #endif
@@ -136,20 +136,14 @@ void ShapeActionInterface::executeCB(const gripper_control::GripperSelectShapeGo
     // helper variables
     ros::Rate r(1);
     bool success = true;
-
-    // push_back the seeds for the fibonacci sequence
-    feedback_.progress = 0;
     result_.done = false;
 
     // publish info to the console for the user
     ROS_INFO("%s: Executing, moving to shape %i", actionName.c_str(), goal->shape);
 
-    //int ret = RequestSem.Wait();
-    //if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in RequestSem.Signal()");
-
     //Request->command = PRESHAPE;
     //Request->preshape = goal->shape;
-    srv.request.shape =  goal->shape;
+    srv.request.shape =  goal->shape;    
 
     if (ros_service_shape_client.call(srv))
     {
@@ -157,12 +151,9 @@ void ShapeActionInterface::executeCB(const gripper_control::GripperSelectShapeGo
     }
     else
     {
-        ROS_ERROR("Failed to call service add_two_ints");
+        ROS_ERROR("Failed to call service /gripper/shape");
         success = false;
     }
-
-    //int ret = RequestSem->Signal();
-    //if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in RequestSem.Signal()");
 
     Status->lastCommandAccomplished = false;
 
@@ -177,9 +168,10 @@ void ShapeActionInterface::executeCB(const gripper_control::GripperSelectShapeGo
             as_.setPreempted();
             success = false;
             break;
-        }
-        feedback_.progress = Status->Position[0];
+        }        
+
         // publish the feedback
+        for(int i = 0; i < NUM_MOT; i++) feedback_.progress[i] = Status->Position[i];
         as_.publishFeedback(feedback_);
         // this sleep is not necessary, the sequence is computed at 1 Hz for demonstration purposes
         r.sleep();

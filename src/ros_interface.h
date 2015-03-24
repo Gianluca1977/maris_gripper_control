@@ -26,7 +26,7 @@
 #define ROS_INTERFACE_NAME "ROS_INTERFACE"
 #define ROS_INTERFACE_SAMPLETIME    (500 * WF_TIME_ONE_MS)
 
-#define ROS_IF
+//#define ROS_IF
 
 class ShapeActionInterface;
 
@@ -64,7 +64,7 @@ protected:
 class ShapeActionInterface
 {
 public:
-    ShapeActionInterface(ros::NodeHandle &nh, std::string name, SystemStatus* status, SystemRequest *request, WF::BinarySemaphore* sem) : as_(nh, name, boost::bind(&ShapeActionInterface::executeCB, this, _1), false), actionName(name), nh_(nh), Status(status), Request(request), RequestSem(sem)
+    ShapeActionInterface(ros::NodeHandle &nh, std::string name, SystemStatus* status, SystemRequest *request) : as_(nh, name, boost::bind(&ShapeActionInterface::executeCB, this, _1), false), actionName(name), nh_(nh), Status(status), Request(request)
     {
         ros_service_shape_client = nh.serviceClient<gripper_control::GripperSelectShape>("gripper/shape");
         as_.start();
@@ -81,8 +81,7 @@ public:
 protected:
 
     SystemStatus* Status;
-    SystemRequest* Request;
-    WF::BinarySemaphore* RequestSem;
+    SystemRequest* Request;    
 
     ros::NodeHandle nh_;
 

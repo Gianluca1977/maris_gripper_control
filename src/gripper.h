@@ -4,7 +4,7 @@
 #include "motorguard.h"
 #include "controllerdata.h"
 
-//#define MOTOR_GUARD
+#define MOTOR_GUARD
 
 class Gripper : virtual public ControllerData
 {

@@ -16,31 +16,61 @@ public:
     MotorSimulator() : StateMachine(ST_MAX_STATES) {}
 
     // external events taken by this state machine
-    void Halt();
-    void SetSpeed(MotorSimulatorData*);
 
 private:
-    // state machine state functions
+
+    int ID;
+
     void ST_Idle();
+    void ST_Bootup_Dev();
+    void ST_Start_Dev();
+    void ST_Shutdown_Dev();
+    void ST_Switch_On_Dev();
+    void ST_Enable_Op_Dev();
+    void ST_Enabled();
+    void ST_Trace_Conf();
+    void ST_Sync_Conf();
+    void ST_TPDO1_Conf();
+    void ST_Faulhaber_Conf();
+    void ST_Done();
+    void ST_Fault();
     void ST_Stop();
-    void ST_Start(MotorSimulatorData*);
-    void ST_ChangeSpeed(MotorSimulatorData*);
 
     // state map to define state function order
     BEGIN_STATE_MAP
-        STATE_MAP_ENTRY(&MotorSimulator::ST_Idle)
-        STATE_MAP_ENTRY(&MotorSimulator::ST_Stop)
-        STATE_MAP_ENTRY(&MotorSimulator::ST_Start)
-        STATE_MAP_ENTRY(&MotorSimulator::ST_ChangeSpeed)
+        STATE_MAP_ENTRY(&MotorConfigurator::ST_Idle)
+        STATE_MAP_ENTRY(&MotorConfigurator::ST_Bootup_Dev)
+        STATE_MAP_ENTRY(&MotorConfigurator::ST_Start_Dev)
+        STATE_MAP_ENTRY(&MotorConfigurator::ST_Shutdown_Dev)
+        STATE_MAP_ENTRY(&MotorConfigurator::ST_Switch_On_Dev)
+        STATE_MAP_ENTRY(&MotorConfigurator::ST_Enable_Op_Dev)
+        STATE_MAP_ENTRY(&MotorConfigurator::ST_Enabled)
+        STATE_MAP_ENTRY(&MotorConfigurator::ST_Trace_Conf)
+        STATE_MAP_ENTRY(&MotorConfigurator::ST_Sync_Conf)
+        STATE_MAP_ENTRY(&MotorConfigurator::ST_TPDO1_Conf)
+        STATE_MAP_ENTRY(&MotorConfigurator::ST_Faulhaber_Conf)
+        STATE_MAP_ENTRY(&MotorConfigurator::ST_Done)
+        STATE_MAP_ENTRY(&MotorConfigurator::ST_Fault)
+        STATE_MAP_ENTRY(&MotorConfigurator::ST_Stop)
     END_STATE_MAP
 
     // state enumeration order must match the order of state
     // method entries in the state map
     enum E_States {
         ST_IDLE = 0,
+        ST_BOOTUP_DEV,
+        ST_START_DEV,
+        ST_SHUTDOWN_DEV,
+        ST_SWITCH_ON_DEV,
+        ST_ENABLE_OP_DEV,
+        ST_ENABLED,
+        ST_TRACE_CONF,
+        ST_SYNC_CONF,
+        ST_TPDO1_CONF,
+        ST_FAULHABER_CONF,
+        ST_DONE,
+        ST_FAULT,
         ST_STOP,
-        ST_START,
-        ST_CHANGE_SPEED,
         ST_MAX_STATES
     };
 };

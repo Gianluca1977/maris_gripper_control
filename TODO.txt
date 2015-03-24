@@ -2,9 +2,9 @@
 
 - Implementare servizio ROS selezione shape -> TESTATO -> OK
 
-- Implementare action ROS selezione shape -> DA TESTARE
+- Implementare action ROS selezione shape -> TESTATO -> OK
 
-- Implementare controllo limitazione tempo/corrente(Ampere) -> DA TESTARE
+- Implementare controllo limitazione tempo/corrente(Ampere) -> DA TESTARE causa segmentation fault
 
 - Implementare homing
 
