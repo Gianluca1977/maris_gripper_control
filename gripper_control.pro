@@ -42,7 +42,8 @@ HEADERS += \
     src/timer.h \
     src/motor_configurator.h \
     src/motorguard.h \
-    src/simulator.h
+    src/simulator.h \
+    src/can_define.h
 
 OTHER_FILES += \
     TODO.txt

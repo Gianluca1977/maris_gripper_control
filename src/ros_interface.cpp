@@ -32,7 +32,7 @@ RosInterface::RosInterface(int argc, char** argv, std::string name) : nodeName(n
 
 RosInterface::~RosInterface()
 {
-
+    delete actionInterface;
 }
 
 void RosInterface::rt_thread_handler()
@@ -51,17 +51,17 @@ void RosInterface::rt_thread_handler()
     if_task->SetReadyUntilPostInit();
     if_task->WaitRunning();
 
-    while (if_task->Continue() && !GLOBALSTOP){
+    while (if_task->Continue() && rosOk() && !GLOBALSTOP){
         //inviare dati alla maixbox grafica
 
         ret = StatusSem.Wait();
         if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in StatusSem.Wait()");
 
-        if(rosOk())
-        {
+        //if(rosOk())
+        //{
             rosPublish();
             rosSpinOnce();
-        }
+        //}
 
         ret = StatusSem.Signal();
         if(ret != WF_RV_OK) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, ROS_INTERFACE_NAME, "Error in StatusSem.Signal()");

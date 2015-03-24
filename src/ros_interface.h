@@ -26,7 +26,7 @@
 #define ROS_INTERFACE_NAME "ROS_INTERFACE"
 #define ROS_INTERFACE_SAMPLETIME    (500 * WF_TIME_ONE_MS)
 
-//#define ROS_IF
+#define ROS_IF
 
 class ShapeActionInterface;
 
