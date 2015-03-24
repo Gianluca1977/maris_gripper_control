@@ -32,7 +32,13 @@ RosInterface::RosInterface(int argc, char** argv, std::string name) : nodeName(n
 
 RosInterface::~RosInterface()
 {
+#ifdef ROS_IF
+    rosSpinOnce();
+    //sleep(1);
     delete actionInterface;
+    //sleep(1);
+    ros::shutdown();
+#endif
 }
 
 void RosInterface::rt_thread_handler()

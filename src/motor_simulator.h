@@ -15,6 +15,8 @@ class MotorSimulator : public StateMachine
 public:
     MotorSimulator() : StateMachine(ST_MAX_STATES) {}
 
+    void setID(int id);
+
     // external events taken by this state machine
 
 private:

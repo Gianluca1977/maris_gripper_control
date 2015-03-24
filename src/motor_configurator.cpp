@@ -29,7 +29,7 @@ void MotorConfigurator::timerExpired()
 
 void MotorConfigurator::StartConfiguration()
 {
-    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling Start Configuration of %p", this);
+    //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "MOTOR_CONFIGURATOR", "Calling Start Configuration of %p", this);
 
     BEGIN_TRANSITION_MAP
         TRANSITION_MAP_ENTRY(ST_BOOTUP_DEV) // ST_IDLE

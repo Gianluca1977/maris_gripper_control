@@ -34,7 +34,7 @@ class RosInterface : virtual protected TcpData, virtual protected Supervisor, pr
 {
 public:
     RosInterface(int argc, char** argv, std::string name);
-    virtual ~RosInterface();
+    ~RosInterface();
 
     void rosSpinOnce();
     bool rosOk();
@@ -72,7 +72,6 @@ public:
 
     ~ShapeActionInterface(void)
     {
-
     }
 
     //declaration of action server callback

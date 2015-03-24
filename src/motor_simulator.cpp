@@ -11,6 +11,12 @@ void MotorSimulator::setID(int id)
 
 void MotorSimulator::ST_Idle()
 {
+
+}
+
+void MotorSimulator::ST_Bootup_Dev()
+{
+
 }
 
 // stop the motor

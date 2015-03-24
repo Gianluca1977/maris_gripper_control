@@ -54,7 +54,7 @@ int main(int argc, char** argv)
         exit(-1);
     }
 
-    Controller gripper_control(argc, argv, nodeName);
+    Controller *gripper_control = new Controller(argc, argv, nodeName);
 
     ret = maintask->WaitRunning();
     if (ret != WF_RV_OK){
@@ -68,9 +68,9 @@ int main(int argc, char** argv)
     int canRet;
 
     // Main loop
-    while (maintask->Continue() && !gripper_control.GLOBALSTOP){
+    while (maintask->Continue() && !gripper_control->GLOBALSTOP){
         //KAL::DebugConsole::Write(LOG_LEVEL_INFO, MAINTASK_NAME, "Waiting for CAN packets...");
-        canRet = gripper_control.receive_can_msg(msg);
+        canRet = gripper_control->receive_can_msg(msg);
 #ifdef VM_TEST
         maintask->Sleep(WF_TIME_ONE_S);
 #endif
@@ -98,20 +98,20 @@ int main(int argc, char** argv)
 
                 //KAL::DebugConsole::Write(LOG_LEVEL_INFO, MAINTASK_NAME, "CAN msg Received ID = %03X TYPE = %02X LEN = %d DATA = %02X %02X %02X %02X %02X %02X %02X %02X", tmpCANMsg.msg.ID, tmpCANMsg.msg.MSGTYPE, tmpCANMsg.msg.LEN, tmpCANMsg.msg.DATA[0], tmpCANMsg.msg.DATA[1], tmpCANMsg.msg.DATA[2], tmpCANMsg.msg.DATA[3], tmpCANMsg.msg.DATA[4], tmpCANMsg.msg.DATA[5], tmpCANMsg.msg.DATA[6], tmpCANMsg.msg.DATA[7]);
 
-                gripper_control.process_message(msg);
+                gripper_control->process_message(msg);
 
                 //} else KAL::DebugConsole::Write(LOG_LEVEL_WARNING,MAINTASK_NAME,"Inconsistent CAN msg lenght");
             }
         }
     }//while (maintask->Continue() && !GLOBALSTOP)
 
-    gripper_control.~Controller();
+    delete gripper_control;
 
     main_shutdown();
 
-    maintask->Exit();
+    kill(0,SIGQUIT);
 
-    std::cout << "Gripper App finished" << std::endl;
+    maintask->Exit();    
 
     return 0;
 }

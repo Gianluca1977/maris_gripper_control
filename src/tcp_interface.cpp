@@ -116,7 +116,7 @@ void TcpReceive::rt_thread_handler()
             if (newsockfd < 0){
                 //error("ERROR ON ACCEPT");
             } else {
-                std::cout << "CONNECTION ACCEPT" << std::endl;
+                //std::cout << "CONNECTION ACCEPT" << std::endl;
                 TcpActive = true;
             }
         }
@@ -205,6 +205,8 @@ void TcpSend::rt_thread_handler()
 
     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TCPSENDTASK_NAME, "TcpSend Created %d", sizeof(SystemStatus));
 
+    TcpActive = false;
+
     if_task->SetReadyUntilPostInit();
     if_task->WaitRunning();
 
@@ -216,8 +218,8 @@ void TcpSend::rt_thread_handler()
 
         if(TcpActive)
         {
-            ret = write(newsockfd,&Status,sizeof(SystemStatus));
-            if(ret != sizeof(SystemStatus)) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPSENDTASK_NAME, "Error in writing status message");
+              ret = write(newsockfd,&Status,sizeof(SystemStatus));
+              if(ret != sizeof(SystemStatus)) KAL::DebugConsole::Write(LOG_LEVEL_ERROR, TCPSENDTASK_NAME, "Error in writing status message");
         }
 
         ret = StatusSem.Signal();
