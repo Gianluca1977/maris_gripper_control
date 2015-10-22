@@ -79,9 +79,12 @@ void Motor::clear()
     Fault = false;
     Position = ERR_VAL;
     PositionGrad = 0;
+    PositionRaw = 0;
     OldPosition = 0;
     updateTime = 0;
     Velocity = ERR_VAL;
+    VelocityGrad = 0;
+    VelocityRaw = 0;
     MaxPosGrad = ERR_VAL;
     BootUp = false;
     State = STATE_NONE;
@@ -96,7 +99,7 @@ void Motor::queryAsyncVel()
 
 void Motor::moveVel(long vel)
 {
-    send_faulhaber_cmd_to_node(FAULHABER_VELOCITY_CMD, vel, ID);
+    send_faulhaber_cmd_to_node(FAULHABER_VELOCITY_CMD, vel*jointReduction/360, ID);
 }
 
 void Motor::movePosAbs(long absValue)
@@ -105,15 +108,25 @@ void Motor::movePosAbs(long absValue)
     send_faulhaber_cmd_to_node(FAULHABER_IN_MOTION_CMD, 0, ID);
 }
 
+void Motor::movePosAbsGrad(double absPos)
+{
+    movePosAbs(absPos*jointReduction/360);
+}
+
+void Motor::movePosAbsRad(double absPos)
+{
+    movePosAbs(absPos*jointReduction/(2*PI));
+}
+
 void Motor::movePosRel(long relValue)
 {
-    send_faulhaber_cmd_to_node(FAULHABER_RELATIVE_POSITION_CMD, relValue, ID);
+    send_faulhaber_cmd_to_node(FAULHABER_RELATIVE_POSITION_CMD, relValue*jointReduction/360, ID);
     send_faulhaber_cmd_to_node(FAULHABER_IN_MOTION_CMD, 0, ID);
 }
 
 void Motor::loadPosAbs(long absValue)
 {
-    send_faulhaber_cmd_to_node(FAULHABER_ABSOLUTE_POSITION_CMD, absValue, ID);
+    send_faulhaber_cmd_to_node(FAULHABER_ABSOLUTE_POSITION_CMD, absValue*jointReduction/360, ID);
 }
 
 void Motor::startMovePos(){
@@ -193,6 +206,7 @@ void Motor::init(int phase) {
         setMaxPeakCurr(MaxPeakCurr); //#Set max Peak Current
         setMaxContCurr(MaxContCurr); //#Set max Continuous Current
 
+        send_cmd_to_node(CMD_OPENCAN_SET_RPDO2_SYNC_CONF, ID); // configure acyclic FAULHABER command feedback
         send_cmd_to_node(CMD_OPENCAN_SET_TPDO3_TRACE_CONF, ID);
         break;
     case INIT_SYNC_CONF:
@@ -221,6 +235,74 @@ void Motor::init(int phase) {
     }
 }
 
+void Motor::processCanMsg(int cmdID, unsigned char data[])
+{
+    if(cmdID == TPDO3_COBID) //0x380(896D) - trace response
+    {
+        long tmp_curr = data[5];
+        Current = (tmp_curr << 8) + data[4];
+
+        PositionRaw = pcanData2Double(data,0);
+        PositionGrad = PositionRaw*360/jointReduction;
+        Position = ((double) PositionGrad)*PI/180.0;
+
+        long long actualTime = llround(KAL::GetTime());
+        VelocityRaw = (long)(PositionRaw - OldPositionRaw)/((actualTime - updateTime)*1E-9);
+        Velocity = (Position - OldPosition)/((actualTime - updateTime)*1E-9);
+
+        OldPositionRaw = PositionRaw;
+        OldPosition = Position;
+        updateTime = actualTime;
+        //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "States Update", "ID = %X,  curr = %X%X, pos = %X%X%X%X", ID, data[5], data[4], data[3], data[2], data[1], data[0] );
+
+    }//if(cmdID == TPDO3_COBID)
+    else if(cmdID == TPDO2_COBID) //0x280(640D) - TxPDO2 response
+    {
+        if(data[0] == 0x2B)
+        {
+            Velocity = pcanData2Double(data,1)*360/jointReduction;
+            //    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "States Update", "ID = %X,  vel = %X%X%X%X", ID, data[4], data[3], data[2], data[1]);
+        }
+        else if(data[0] == 0x40)
+        {
+            PositionGrad = pcanData2Double(data,1)*360/jointReduction;
+            //   KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "States Update", "ID = %X,  pos = %X%X%X%X", ID, data[4], data[3], data[2], data[1]);
+        }
+    }//else if(cmdID == TPDO2_COBID)
+    else if(cmdID == TPDO1_COBID) //0x180(384D) - TxPDO1 (statusWord)
+    {
+        stateUpdate(data);
+
+        if(stateChanged())
+            switch(State & STATUS_WORD_MASK){
+            case SWITCH_ON_DISABLED:
+                KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Motor %d Switch On Disabled.", ID);
+                break;
+            case READY_TO_SWITCH_ON:
+                KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Motor %d Ready to Switch On.", ID);
+                break;
+            case SWITCHED_ON:
+                KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Motor %d Switched On.", ID);
+                break;
+            case OPERATION_ENABLED:
+                KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Motor %d Operation Enabled.", ID);
+                break;
+            case FAULT_STATE:
+                KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Motor %d Fault Detected. Reset Motor.", ID);
+                break;
+            case QUICKSTOP:
+                break;
+            default:
+                break;
+            }
+
+    } else if(cmdID == BOOTUP_COBID) //0x700 (1972D) - Boot up message
+    {
+        BootUp = true;
+        KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, TRIGGERTASK_NAME, "Motor %d booted up.", ID);
+    }
+}
+
 void Motor::stateUpdate(unsigned char data[])
 {
     Old_State = State;
@@ -230,13 +312,27 @@ void Motor::stateUpdate(unsigned char data[])
 
     TargetReached = State & TARGET_MASK;
 
-    //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "States Update", "ID = %X,  State = %X%X, %X, Old_State = %X", ID, msg.DATA[1], msg.DATA[0], State, Old_State);
+    //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "States Update", "ID = %X,  State = %X%X, %X, Old_State = %X", ID, data[1], data[0], State, Old_State);
 
     Operational = ((State & STATUS_WORD_MASK) == OPERATION_ENABLED);
     Fault = State & FAULT_STATE;
 }
 
+double Motor::pcanData2Double(unsigned char data[], int offset)
+{
+    long long int tmp_data = data[3 + offset];
+    tmp_data = (tmp_data << 8) + data[2 + offset];
+    tmp_data = (tmp_data << 8) + data[1 + offset];
+    tmp_data = (tmp_data << 8) + data[0 + offset];
 
+
+    if(tmp_data & SIGN_MASK) {
+        //DEBUG("changing pos sign..\n");
+        //DEBUG("~(tmp_data-1) = 0x%X\n",(( VALUE_MASK & ~tmp_data) +1));
+        return -1.0*(double)(( VALUE_MASK & ~tmp_data ) +1);
+    }
+    else return (double) tmp_data;
+}
 
 
 

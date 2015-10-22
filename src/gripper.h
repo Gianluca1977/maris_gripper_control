@@ -4,7 +4,7 @@
 #include "motorguard.h"
 #include "controllerdata.h"
 
-//#define MOTOR_GUARD
+#define MOTOR_GUARD
 
 class Gripper : virtual public ControllerData
 {
@@ -25,14 +25,14 @@ public:
     void disableMotors();
     void enableMotors();
 
-    void updateGuard();
+    void update();
     void emergencyStop();
 
     void stop();
     bool checkStopped();
 
-    void movePosAbs(int64_t req_pos[NUM_MOT]);
-    void movePosAbs(double req_pos[NUM_MOT]);
+    void movePosAbsGrad(int64_t req_pos[NUM_MOT]);
+    void movePosAbsGrad(double req_pos[NUM_MOT]);
     void moveVel(int64_t req_vel[NUM_MOT]);
     void goFinalPos(bool motor_selection[NUM_MOT]);
     void setHomePos(bool motor_selection[NUM_MOT]);
@@ -44,6 +44,7 @@ public:
     bool commandExecuted();
 
     bool hasID(int nodeID);
+    int getMotorIndex(int nodeID);
 
     void updateStates(TPCANMsg msg);
 
@@ -52,9 +53,6 @@ public:
 protected:
     void saveMaxLimit(int nodeId = -1, long pos = 0);
     double roundToSignificant(double num, int significant);
-
-    static int jointReduction;
-    static int safeJointOffset;
 };
 
 #endif // GRIPPER_H

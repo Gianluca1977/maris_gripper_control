@@ -23,49 +23,58 @@ private:
 
     int ID;
 
-    void ST_Idle();
-    void ST_Bootup_Dev();
-    void ST_Start_Dev();
-    void ST_Shutdown_Dev();
-    void ST_Switch_On_Dev();
-    void ST_Enable_Op_Dev();
-    void ST_Enabled();
-    void ST_Trace_Conf();
+    // state machine state functions
+    void ST_PreBoot();
+    void ST_BootedUp();
+    void ST_SwitchOnDisabled();
+    void ST_ReadyToSwitchOn();
+    void ST_SwitchedOn();
+    void ST_OperationEnabled();
+    void ST_QuickStopActive();
+    void ST_Limit_Conf();
     void ST_Sync_Conf();
     void ST_TPDO1_Conf();
+    void ST_TPDO2_Conf();
     void ST_Faulhaber_Conf();
-    void ST_Done();
-    void ST_Fault();
+    void ST_Idle();
+    void ST_CommandReceived();
+    void ST_CommandPending();
+    void ST_Moving();
     void ST_Stop();
+    void ST_Fault();
 
     // state map to define state function order
     BEGIN_STATE_MAP
-        STATE_MAP_ENTRY(&MotorConfigurator::ST_Idle)
-        STATE_MAP_ENTRY(&MotorConfigurator::ST_Bootup_Dev)
-        STATE_MAP_ENTRY(&MotorConfigurator::ST_Start_Dev)
-        STATE_MAP_ENTRY(&MotorConfigurator::ST_Shutdown_Dev)
-        STATE_MAP_ENTRY(&MotorConfigurator::ST_Switch_On_Dev)
-        STATE_MAP_ENTRY(&MotorConfigurator::ST_Enable_Op_Dev)
-        STATE_MAP_ENTRY(&MotorConfigurator::ST_Enabled)
-        STATE_MAP_ENTRY(&MotorConfigurator::ST_Trace_Conf)
-        STATE_MAP_ENTRY(&MotorConfigurator::ST_Sync_Conf)
-        STATE_MAP_ENTRY(&MotorConfigurator::ST_TPDO1_Conf)
-        STATE_MAP_ENTRY(&MotorConfigurator::ST_Faulhaber_Conf)
-        STATE_MAP_ENTRY(&MotorConfigurator::ST_Done)
-        STATE_MAP_ENTRY(&MotorConfigurator::ST_Fault)
-        STATE_MAP_ENTRY(&MotorConfigurator::ST_Stop)
+        STATE_MAP_ENTRY(&MotorSimulator::ST_PreBoot)
+        STATE_MAP_ENTRY(&MotorSimulator::ST_BootedUp)
+        STATE_MAP_ENTRY(&MotorSimulator::ST_SwitchOnDisabled)
+        STATE_MAP_ENTRY(&MotorSimulator::ST_ReadyToSwitchOn)
+        STATE_MAP_ENTRY(&MotorSimulator::ST_SwitchedOn)
+        STATE_MAP_ENTRY(&MotorSimulator::ST_OperationEnabled)
+        STATE_MAP_ENTRY(&MotorSimulator::ST_QuickStopActive)
+        STATE_MAP_ENTRY(&MotorSimulator::ST_Limit_Conf)
+        STATE_MAP_ENTRY(&MotorSimulator::ST_Sync_Conf)
+        STATE_MAP_ENTRY(&MotorSimulator::ST_TPDO1_Conf)
+        STATE_MAP_ENTRY(&MotorSimulator::ST_TPDO2_Conf)
+        STATE_MAP_ENTRY(&MotorSimulator::ST_Faulhaber_Conf)
+        STATE_MAP_ENTRY(&MotorSimulator::ST_Idle)
+        STATE_MAP_ENTRY(&MotorSimulator::ST_CommandReceived)
+        STATE_MAP_ENTRY(&MotorSimulator::ST_CommandPending)
+        STATE_MAP_ENTRY(&MotorSimulator::ST_Moving)
+        STATE_MAP_ENTRY(&MotorSimulator::ST_Stop)
+        STATE_MAP_ENTRY(&MotorSimulator::ST_Fault)
     END_STATE_MAP
 
     // state enumeration order must match the order of state
     // method entries in the state map
     enum E_States {
-        ST_IDLE = 0,
-        ST_BOOTUP_DEV,
-        ST_START_DEV,
-        ST_SHUTDOWN_DEV,
-        ST_SWITCH_ON_DEV,
-        ST_ENABLE_OP_DEV,
-        ST_ENABLED,
+        ST_PREBOOT = 0,
+        ST_BOOTEDUP,
+        ST_SWITCHONDISABLED,
+        ST_READYTOSWTICHON,
+        ST_SWITCHEDON,
+        ST_OPERATIONENABLED,
+        ST_QUICKSTOPACTIVE,
         ST_TRACE_CONF,
         ST_SYNC_CONF,
         ST_TPDO1_CONF,
@@ -73,6 +82,10 @@ private:
         ST_DONE,
         ST_FAULT,
         ST_STOP,
+        ST_IDLE,
+        ST_COMMANDRECEIVED,
+        ST_COMMANDPENDING,
+        ST_MOVING,
         ST_MAX_STATES
     };
 };

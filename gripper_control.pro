@@ -21,7 +21,9 @@ SOURCES += \
     src/motor_configurator.cpp \
     src/motorguard.cpp \
     src/shape_actionclient.cpp \
-    src/simulator.cpp
+    src/simulator.cpp \
+    src/motordriver.cpp \
+    src/can_fpga.cpp
 
 HEADERS += \
     src/can_define.h \
@@ -43,7 +45,9 @@ HEADERS += \
     src/motor_configurator.h \
     src/motorguard.h \
     src/simulator.h \
-    src/can_define.h
+    src/can_define.h \
+    src/motordriver.h \
+    src/can_fpga.h
 
 OTHER_FILES += \
     TODO.txt

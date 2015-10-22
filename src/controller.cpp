@@ -110,7 +110,7 @@ void CtrlHandler::ST_Wait_Configuration()
 void CtrlHandler::ST_Running()
 {    
     // call motor guard
-    updateGuard();
+    update();
 
     if(!isOperative() || !configurator.isConfigured())
     {
@@ -145,7 +145,7 @@ void CtrlHandler::ST_Running()
                 break;
             case GO_POSITION:
                 resetCommand();
-                movePosAbs(Request.req_pos);
+                movePosAbsGrad(Request.req_pos);
                 Status.lastCommandAccomplished = false;
                 break;
             case GO_FINAL_POS:
@@ -171,7 +171,7 @@ void CtrlHandler::ST_Running()
                 KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Preshape request %d", Request.preshape);
                 if(Request.preshape >= 0 && Request.preshape < finger_conf_num)
                 {
-                    movePosAbs(finger_confs[Request.preshape]);
+                    movePosAbsGrad(finger_confs[Request.preshape]);
                     Status.lastCommandAccomplished = false;
                 }
                 else KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, CONTROLTASK_NAME, "Preshape request out of range");

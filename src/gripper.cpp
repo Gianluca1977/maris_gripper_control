@@ -8,10 +8,10 @@ MotorGuard Gripper::Motors[NUM_MOT];
 Motor Gripper::Motors[NUM_MOT];
 #endif
 
+/*
 int Gripper::jointReduction;
 int Gripper::safeJointOffset;
 
-/*
 Gripper::Gripper()
 {    
     jointReduction = 3000 * 14 * 20 * 33 / 12;
@@ -25,10 +25,9 @@ Gripper::Gripper(int nodeIds[])
     {
         Motors[i].setID(nodeIds[i]);
         Motors[i].setLimits(operConfig.max_speed,operConfig.max_acc,operConfig.max_deacc,operConfig.peak_curr,operConfig.cont_curr);
-    }
-
-    jointReduction = 3000 * 14 * 20 * 33 / 12;
-    safeJointOffset = 10000;			//encoder pulse
+        Motors[i].jointReduction = 3000 * 14 * 20 * 33 / 12;
+        Motors[i].jointOffset = 10000;			//encoder pulse
+    }    
 }
 
 void Gripper::Open(int vel)
@@ -51,7 +50,7 @@ void Gripper::enableMotors()
     for(int i = 0; i < NUM_MOT; i++) Motors[i].enable();
 }
 
-void Gripper::updateGuard()
+void Gripper::update()
 {
 #ifdef MOTOR_GUARD
     for(int i = 0; i < NUM_MOT; i++) Motors[i].updateGuard();
@@ -86,14 +85,14 @@ bool Gripper::checkStopped()
     return true;
 }
 
-void Gripper::movePosAbs(int64_t req_pos[])
+void Gripper::movePosAbsGrad(int64_t req_pos[])
 {
-    for(int i = 0; i < NUM_MOT; i++) Motors[i].movePosAbs(req_pos[i]*jointReduction/360);
+    for(int i = 0; i < NUM_MOT; i++) Motors[i].movePosAbsGrad(req_pos[i]);
 }
 
-void Gripper::movePosAbs(double req_pos[])
+void Gripper::movePosAbsGrad(double req_pos[])
 {
-    for(int i = 0; i < NUM_MOT; i++) Motors[i].movePosAbs(req_pos[i]*jointReduction/360);
+    for(int i = 0; i < NUM_MOT; i++) Motors[i].movePosAbsGrad(req_pos[i]);
 }
 
 void Gripper::moveVel(int64_t req_vel[])
@@ -103,7 +102,7 @@ void Gripper::moveVel(int64_t req_vel[])
 
 void Gripper::goFinalPos(bool motor_selection[])
 {
-    for(int i = 0; i < NUM_MOT; i++) if(motor_selection[i]) Motors[i].movePosAbs(Motors[i].MaxPosGrad*jointReduction/360);
+    for(int i = 0; i < NUM_MOT; i++) if(motor_selection[i]) Motors[i].movePosAbsGrad(Motors[i].MaxPosGrad);
 }
 
 void Gripper::setHomePos(bool motor_selection[])
@@ -125,14 +124,25 @@ void Gripper::setFinalPos(bool motor_selection[])
 // Update Motors States
 void Gripper::updateStates(TPCANMsg msg) {
 
+    /*
     static std::vector<bool> auxSetTactile(NUM_MOT,false);
     bool allSet = true;
 
     double sensorsOut[3];
+    */
 
     int nodeID = msg.ID & NODE_ID_MASK;
     int cmdID = msg.ID & COB_ID_MASK;
 
+    int index = getMotorIndex(nodeID);
+
+    if(index >= 0 && index <= NUM_MOT)
+    {
+        Motors[index].processCanMsg(cmdID, msg.DATA);
+        return;
+    }
+
+    /*
     for(int i = 0; i < NUM_MOT; i++) {
         if(Motors[i].ID == nodeID) {
             if(cmdID == TPDO3_COBID) //0x380(896D) - trace response
@@ -140,12 +150,15 @@ void Gripper::updateStates(TPCANMsg msg) {
                 long tmp_curr = msg.DATA[5];
                 Motors[i].Current = (tmp_curr << 8) + msg.DATA[4];
 
-                Motors[i].PositionGrad = pcanData2Double(msg,0)*360/jointReduction;
+                Motors[i].PositionRaw = pcanData2Double(msg,0);
+                Motors[i].PositionGrad = Motors[i].PositionRaw*360/jointReduction;
                 Motors[i].Position = ((double) Motors[i].PositionGrad)*PI/180.0;
 
                 long long actualTime = llround(KAL::GetTime());
+                Motors[i].VelocityRaw = (long)(Motors[i].PositionRaw - Motors[i].OldPositionRaw)/((actualTime - Motors[i].updateTime)*1E-9);
                 Motors[i].Velocity = (Motors[i].Position - Motors[i].OldPosition)/((actualTime - Motors[i].updateTime)*1E-9);
 
+                Motors[i].OldPositionRaw = Motors[i].PositionRaw;
                 Motors[i].OldPosition = Motors[i].Position;
                 Motors[i].updateTime = actualTime;
                 //KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "States Update", "ID = %X,  curr = %X%X, pos = %X%X%X%X", Motors[i].ID, msg.DATA[5], msg.DATA[4], msg.DATA[3], msg.DATA[2], msg.DATA[1], msg.DATA[0] );
@@ -199,7 +212,7 @@ void Gripper::updateStates(TPCANMsg msg) {
             break;
         }//if(Motors[i].ID == nodeID){
     }//for(int i=0; i<NUM_MOT;i++){
-
+    */
     /*
     // Response from sensors
     if(cmdID == TPDO3_COBID && nodeID > 15) {
@@ -240,7 +253,6 @@ void Gripper::updateStates(TPCANMsg msg) {
     */
 }//void updateStates
 
-
 /*
   * Check if we are interested on that node
   * return true if the node is in the JointIDs_ vector
@@ -249,8 +261,10 @@ void Gripper::updateStates(TPCANMsg msg) {
 bool Gripper::hasID(int nodeID)
 {
     bool yep = false;
-    for(unsigned int i=0;i < NUM_MOT;i++) {
-        if(Motors[i].ID == nodeID) {
+    for(unsigned int i=0; i < NUM_MOT; i++)
+    {
+        if(Motors[i].ID == nodeID)
+        {
             yep = true;
             break;
         }
@@ -265,6 +279,12 @@ bool Gripper::hasID(int nodeID)
         }
     }*/
     return yep;
+}
+
+int Gripper::getMotorIndex(int nodeID)
+{
+    for(unsigned int i=0; i < NUM_MOT; i++) if(Motors[i].ID == nodeID) return i;
+    return -1;
 }
 
 double Gripper::pcanData2Double(TPCANMsg msg, int offset)

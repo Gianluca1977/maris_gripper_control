@@ -3,6 +3,7 @@
 
 #include "can_driver.h"
 #include "supervisor.h"
+#include "state_machine.h"
 
 #define INIT_WAIT           -1
 #define INIT_BOOTUP_DEV		0
@@ -32,6 +33,9 @@ public:
     int MaxAcc;
     int MaxDeacc;
 
+    int jointReduction;
+    int jointOffset;
+
     union {
         int State;
         char State_byte[2];
@@ -46,8 +50,12 @@ public:
     double Position;	//last found pos
     long Current;
     long Control;
+    long PositionRaw;
+    long OldPositionRaw;
+    long VelocityRaw;
     double PositionGrad;
     double OldPosition;
+    double VelocityGrad;
     double MaxPosGrad;
     double MinPosGrad;
 
@@ -75,6 +83,8 @@ public:
     void clear();
     void init(int phase);
 
+    virtual void processCanMsg(int cmdID, unsigned char data[]);
+
     void stateUpdate(unsigned char data[]);
 
     bool stateChanged(){return ((State & ~TARGET_MASK) != (Old_State & ~TARGET_MASK));}
@@ -86,11 +96,14 @@ public:
     void setMaxContCurr(long maxCCurr = 1000);
     void setMaxVel(long maxVel = 500);
     void queryAsyncVel();
-    void moveVel(long vel = 0);
+    virtual void moveVel(long vel = 0);
     void movePosAbs(long absValue = 0);
+    virtual void movePosAbsGrad(double absPos = 0);
+    void movePosAbsRad(double absPos = 0);
     void loadPosAbs(long absValue = 0);
     void startMovePos();
     void movePosRel(long relValue= 0);
+    double pcanData2Double(unsigned char data[], int offset);
 };
 
 #endif // MOTOR_H

@@ -22,14 +22,13 @@ class MotorGuard : public StateMachine, public Motor
     static Timer guardTimer;
 
     // state machine state functions
-
-    void ST_Idle();
+    void ST_Idle(); 
     void ST_Warning();
     void ST_Overload();
 
     // state map to define state function order
     BEGIN_STATE_MAP
-        STATE_MAP_ENTRY(&MotorGuard::ST_Idle)
+        STATE_MAP_ENTRY(&MotorGuard::ST_Idle)        
         STATE_MAP_ENTRY(&MotorGuard::ST_Warning)
         STATE_MAP_ENTRY(&MotorGuard::ST_Overload)
     END_STATE_MAP
@@ -37,7 +36,7 @@ class MotorGuard : public StateMachine, public Motor
     // state enumeration order must match the order of state
     // method entries in the state map
     enum E_States {
-        ST_IDLE = 0,
+        ST_IDLE = 0,        
         ST_WARNING,
         ST_OVERLOAD,
         ST_MAX_STATES
