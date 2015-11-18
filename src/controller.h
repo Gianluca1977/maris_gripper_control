@@ -14,6 +14,7 @@
 #include "timer.h"
 #include "ros_interface.h"
 #include "motorguard.h"
+#include "can_fpga.h"
 
 #include "wf.h"
 
@@ -124,20 +125,20 @@ public:
     //const StateStruct* GetStateMap(){return (const StateStruct*) &StateMap[0];}
 
     BEGIN_STATE_MAP
-        STATE_MAP_ENTRY(&CtrlHandler::ST_Start_Controller)
-        STATE_MAP_ENTRY(&CtrlHandler::ST_Wait_Configuration)
-        STATE_MAP_ENTRY(&CtrlHandler::ST_Running)
-        STATE_MAP_ENTRY(&CtrlHandler::ST_Emergency)
+    STATE_MAP_ENTRY(&CtrlHandler::ST_Start_Controller)
+    STATE_MAP_ENTRY(&CtrlHandler::ST_Wait_Configuration)
+    STATE_MAP_ENTRY(&CtrlHandler::ST_Running)
+    STATE_MAP_ENTRY(&CtrlHandler::ST_Emergency)
     END_STATE_MAP
 
     // state enumeration order must match the order of state
     // method entries in the state map
     enum E_States {
         ST_START_CONTROLLER = 0,
-        ST_WAIT_CONFIGURATION,
-        ST_RUNNING,
-        ST_EMERGENCY,
-        ST_MAX_STATES
+                ST_WAIT_CONFIGURATION,
+                ST_RUNNING,
+                ST_EMERGENCY,
+                ST_MAX_STATES
     };
 
 private:
@@ -146,19 +147,23 @@ private:
 };
 
 /* Gripper Controller Class */
-class Controller : virtual public CtrlHandler, virtual public PubJointState, virtual public TcpSend, virtual public TcpReceive, virtual public RosInterface
+#ifdef ROS_IF
+class Controller : virtual public CtrlHandler, virtual public PubJointState, virtual public TcpSend, virtual public TcpReceive, virtual public RosInterface//, virtual public CanFpga
+#else
+class Controller : virtual public CtrlHandler, virtual public PubJointState, virtual public TcpSend, virtual public TcpReceive//, virtual public RosInterface
+#endif
 {
 public:
     Controller(int arg_c, char** arg_v, std::string node_Name);
-    ~Controller();    
+    ~Controller();
 
     void process_message();
     void process_message(TPCANMsg msg);
 
-	//void initStateMachine(int& initPhase, void* p);
+    //void initStateMachine(int& initPhase, void* p);
 
-	void install_signal(void);
-	void signal_handler(int unused);
+    void install_signal(void);
+    void signal_handler(int unused);
 };
 
 #endif /* CONTROLLER_H_ */

@@ -8,6 +8,8 @@
 
 //#define SIMULATION
 
+#ifdef ROS_IF
+
 RosInterface::RosInterface(int argc, char** argv, std::string name) : nodeName(name)
 {
 #ifdef ROS_IF
@@ -177,7 +179,7 @@ void ShapeActionInterface::executeCB(const gripper_control::GripperSelectShapeGo
         }        
 
         // publish the feedback
-        for(int i = 0; i < NUM_MOT; i++) feedback_.progress[i] = Status->Position[i];
+        //for(int i = 0; i < NUM_MOT; i++) feedback_.progress[i] = Status->Position[i];
         as_.publishFeedback(feedback_);
         // this sleep is not necessary, the sequence is computed at 1 Hz for demonstration purposes
         r.sleep();
@@ -192,7 +194,7 @@ void ShapeActionInterface::executeCB(const gripper_control::GripperSelectShapeGo
     }
 }
 
-
+#endif /* ROS_IF */
 
 
 

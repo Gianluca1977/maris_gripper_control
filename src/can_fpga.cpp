@@ -3,6 +3,8 @@
 
 std::queue<TPCANMsg> CanFpga::msg_inqueue;
 
+//WF::CAN CanFpga::mycan;
+
 WF::Task* CanFpga::writing_task;
 WF::Task* CanFpga::reading_task;
 
@@ -15,16 +17,19 @@ CanFpga::CanFpga()
 
     char *ptr;
     int i;
+    int fd;
     int nType = HW_PCI;
     __u32 dwPort = 0;
     __u16 wIrq = 0;
     __u16 wBTR0BTR1 = 0;
     char *filename = NULL;
     const char *szDevNode = DEFAULT_NODE;
-    bool bDevNodeGiven = false;
+    bool bDevNodeGiven = true;
     bool bTypeGiven = false;
 
     char txt[VERSIONSTRING_LEN];
+
+    current_state = 0;
 
     nExtended = CAN_INIT_TYPE_ST;
 
@@ -36,6 +41,9 @@ CanFpga::CanFpga()
         printf(", init with 500 kbit/sec.\n");
     printf("             Data will be read from \"%s\".\n", filename);
 
+    //fd = mycan.Open("/dev/pcan1", O_RDWR, wBTR0BTR1);
+    //printf("can_interface_rt: mycan.Open returns %d\n", ret);
+
     /* open CAN port */
     if ((bDevNodeGiven) || (!bDevNodeGiven && !bTypeGiven)) {
         h = LINUX_CAN_Open(szDevNode, O_RDWR);
@@ -43,7 +51,6 @@ CanFpga::CanFpga()
             SET_INIT_STATE(STATE_FILE_OPENED);
         else {
             printf("can_interface_rt: can't open %s\n", szDevNode);
-            goto error;
         }
     }
     else {
@@ -57,7 +64,6 @@ CanFpga::CanFpga()
             SET_INIT_STATE(STATE_FILE_OPENED);
         else {
             printf("can_interface_rt: can't open %s device.\n", getNameOfInterface(nType));
-            goto error;
         }
     }
 
@@ -70,7 +76,6 @@ CanFpga::CanFpga()
         printf("can_interface_rt: driver version = %s\n", txt);
     else {
         perror("can_interface_rt: CAN_VersionInfo()");
-        goto error;
     }
 
     // init to a user defined bit rate
@@ -78,7 +83,6 @@ CanFpga::CanFpga()
         errno = CAN_Init(h, wBTR0BTR1, nExtended);
         if (errno) {
             perror("can_interface_rt: CAN_Init()");
-            goto error;
         }
     }
 
@@ -133,33 +137,29 @@ void* CanFpga::reading_task_proc(void *arg)
     reading_task->WaitRunning();
 
     // Enter hard realtime
-    reading_task->GotoHard();
+    //reading_task->GotoHard();
 
     while (reading_task->Continue() && !GLOBALSTOP) {
         //printf("in while\n");
 
-        if ((errno = CAN_Read(h, &msg))){
-            shutdownnow = 1;
+        if ((errno = CAN_Read(current_if->h, &msg))){
+            KAL::DebugConsole::Write(LOG_LEVEL_ERROR, "FPGA_reading_task", "CAN_Read return %d",errno);
         }
         else {
             // check if a CAN status is pending
             if (msg.MSGTYPE & MSGTYPE_STATUS) {
-                status = CAN_Status(h);
+                status = CAN_Status(current_if->h);
                 if ((int)status < 0){
-                    shutdownnow = 1;
+                    KAL::DebugConsole::Write(LOG_LEVEL_ERROR, "FPGA_reading_task", "reading_task_proc: status is negative");
                 }
-                //  else print_can_msg(&m);
+                //else print_can_msg(&m);
             }
         }
 
-        print_can_msg(&msg);
-        ret = rt_mbx_send(out_mbx,&msg,sizeof(TPCANMsg));
-        if(ret < 0){
-            printf("reading_task_proc: rt_mbx_send error\n");
-            shutdownnow = 1;
-        }
+        KAL::DebugConsole::Write(LOG_LEVEL_INFO, "FPGA_reading_task", "CAN msg Received ID = %03X TYPE = %02X LEN = %d DATA = %02X %02X %02X %02X %02X %02X %02X %02X", msg.ID, msg.MSGTYPE, msg.LEN, msg.DATA[0], msg.DATA[1], msg.DATA[2], msg.DATA[3], msg.DATA[4], msg.DATA[5], msg.DATA[6], msg.DATA[7]);
 
-        if (shutdownnow == 1) break;
+        msg_inqueue.push(msg);
+
     }
 
     reading_task->GotoSoft();
@@ -172,8 +172,6 @@ void* CanFpga::reading_task_proc(void *arg)
 
 void* CanFpga::writing_task_proc(void *arg)
 {
-    TPCANMsg msg;
-
     CanFpga *current_if = (CanFpga*) arg;
 
     int ret = 0;
@@ -193,28 +191,25 @@ void* CanFpga::writing_task_proc(void *arg)
     writing_task->WaitRunning();
 
     // Enter hard realtime
-    writing_task->GotoHard();
-
+    //writing_task->GotoHard();
 
     //---------------
     while (writing_task->Continue() && !GLOBALSTOP) {
 
-        ret = rt_mbx_receive(in_mbx,&msg,sizeof(TPCANMsg));
-        if(ret < 0){
-            printf("writing_task_proc: rt_mbx_receive error\n");
-            shutdownnow = 1;
-            break;
+        while(!msg_outqueue.empty()){
+            TPCANMsg* CANMsg = &(msg_outqueue.front());
+            KAL::DebugConsole::Write(LOG_LEVEL_INFO, "FPGA_writing_task", "Send CAN msg ID = %03X TYPE = %02X LEN = %d DATA = %02X %02X %02X %02X %02X %02X %02X %02X", CANMsg->ID, CANMsg->MSGTYPE, CANMsg->LEN, CANMsg->DATA[0], CANMsg->DATA[1], CANMsg->DATA[2], CANMsg->DATA[3], CANMsg->DATA[4], CANMsg->DATA[5], CANMsg->DATA[6], CANMsg->DATA[7]);
+
+#ifndef VM_TEST
+            if ((errno = CAN_Write(current_if->h, CANMsg)))
+                KAL::DebugConsole::Write(LOG_LEVEL_ERROR, "FPGA_writing_task", "CAN_Write return %d",errno);
+
+            rt_sleep(WF_TIME_ONE_MS);
+#endif
+
+            msg_outqueue.pop();
         }
 
-        print_can_msg(msg);
-
-        // test for standard frames only
-        if ((nExtended == CAN_INIT_TYPE_EX) || !(iter->MSGTYPE & MSGTYPE_EXTENDED)) {
-            // send the message
-            if ((errno = CAN_Write(h, &(*iter))))
-                shutdownnow = 1;
-        }
-        if (shutdownnow == 1) break;
 
     }
 
@@ -226,4 +221,60 @@ void* CanFpga::writing_task_proc(void *arg)
 
 }
 
+// lookup for HW_... constant out of device type string
+int CanFpga::getTypeOfInterface(char *szTypeName)
+{
+    int nType = 0;
 
+    if (!strcmp(szTypeName, "pci"))
+        nType = HW_PCI;
+    else
+    {
+        if (!strcmp(szTypeName, "isa"))
+            nType = HW_ISA_SJA;
+        else
+        {
+            if (!strcmp(szTypeName, "sp"))
+                nType = HW_DONGLE_SJA;
+            else
+            {
+                if (!strcmp(szTypeName, "epp"))
+                    nType = HW_DONGLE_SJA_EPP;
+                else
+                {
+                    if (!strcmp(szTypeName, "usb"))
+                        nType = HW_USB;
+                    else
+                    {
+                        if (!strcmp(szTypeName, "usbpro"))
+                            nType = HW_USB_PRO;
+                        else
+                        {
+                            if (!strcmp(szTypeName, "pccard"))
+                                nType = HW_PCCARD;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return nType;
+}
+
+// the opposite: lookup for device string out of HW_.. constant
+char *CanFpga::getNameOfInterface(int nType)
+{
+  switch (nType)
+  {
+    case HW_PCI:            return "pci";
+    case HW_ISA_SJA:        return "isa";
+    case HW_DONGLE_SJA:     return "sp";
+    case HW_DONGLE_SJA_EPP: return "epp";
+    case HW_USB:            return "usb";
+    case HW_USB_PRO:        return "usbpro";
+    case HW_PCCARD:         return "pccard";
+
+    default:                return "unknown";
+  }
+}

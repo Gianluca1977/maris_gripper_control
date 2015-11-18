@@ -27,6 +27,7 @@
 #define ROS_INTERFACE_SAMPLETIME    (500 * WF_TIME_ONE_MS)
 
 #define ROS_IF
+#ifdef ROS_IF
 
 class ShapeActionInterface;
 
@@ -95,5 +96,7 @@ protected:
     gripper_control::GripperSelectShapeFeedback feedback_;
     gripper_control::GripperSelectShapeResult result_;
 };
+
+#endif /* ROS_IF */
 
 #endif /* ROSINTERFACE_H_ */

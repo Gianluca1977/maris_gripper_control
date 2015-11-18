@@ -25,7 +25,7 @@ Gripper::Gripper(int nodeIds[])
     {
         Motors[i].setID(nodeIds[i]);
         Motors[i].setLimits(operConfig.max_speed,operConfig.max_acc,operConfig.max_deacc,operConfig.peak_curr,operConfig.cont_curr);
-        Motors[i].jointReduction = 3000 * 14 * 20 * 33 / 12;
+        Motors[i].jointReduction = ENCODER_PULSE * FIRST_STAGE * SECOND_STAGE * FINGER_PULLEY / MOTOR_PULLEY;
         Motors[i].jointOffset = 10000;			//encoder pulse
     }    
 }

@@ -18,12 +18,14 @@
 #include <fcntl.h>    // O_RDWR
 
 #include <libpcan.h>
-#include <src/common.h>
+//#include <src/pcan_common.h>
 #include <ctype.h>
-#include <src/parser.h>
+//#include <src/parser.h>
 
 #include "can_driver.h"
 #include "supervisor.h"
+//#include "kal_can.h"
+//#include "wf_can.h"
 
 //****************************************************************************
 // DEFINES
@@ -31,8 +33,8 @@
 #define DEFAULT_NODE "/dev/pcan1"
 #define MAX_MSG 20
 
-#define WRITING_FPGATASK_NAME    WRTSK
-#define READING_FPGATASK_NAME    RDTSK
+#define WRITING_FPGATASK_NAME   ("WRTSK")
+#define READING_FPGATASK_NAME   ("RDTSK")
 
 #define WRITING_FPGATASK_SAMPLETIME (10 * WF_TIME_ONE_MS)
 #define READING_FPGATASK_PRIORITY   (10)
@@ -60,13 +62,13 @@ class CanFpga : private CanInterface, virtual protected Supervisor
     const char *current_release;
     int nExtended;
 
-
     static std::queue<TPCANMsg> msg_inqueue; // in msg queue (from the devices)
 
     //****************************************************************************
     // GLOBALS
-    unsigned int current_state = 0;
-    int shutdownnow = 0;
+    unsigned int current_state;
+
+    //static WF::CAN mycan;
 
     static WF::Task *writing_task;
     static WF::Task *reading_task;
@@ -75,12 +77,20 @@ class CanFpga : private CanInterface, virtual protected Supervisor
     static WF::Thread reading_thr;
     static void* returnValue;
 
+    static void *reading_task_proc(void *arg);
+    static void *writing_task_proc(void *arg);
+
+    // lookup for HW_... constant out of device type string
+    int getTypeOfInterface(char *szTypeName);
+
+    // the opposite: lookup for device string out of HW_.. constant
+    char *getNameOfInterface(int nType);
+
+
 public:
     CanFpga();
     ~CanFpga();
 
-    void *reading_task_proc(void *arg);
-    void *writing_task_proc(void *arg);
 };
 
 #endif // CAN_FPGA_H

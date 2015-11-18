@@ -99,7 +99,8 @@ void Motor::queryAsyncVel()
 
 void Motor::moveVel(long vel)
 {
-    send_faulhaber_cmd_to_node(FAULHABER_VELOCITY_CMD, vel*jointReduction/360, ID);
+    //send_faulhaber_cmd_to_node(FAULHABER_VELOCITY_CMD, vel*jointReduction/360, ID);
+    send_faulhaber_cmd_to_node(FAULHABER_VELOCITY_CMD, vel, ID);
 }
 
 void Motor::movePosAbs(long absValue)
@@ -248,7 +249,7 @@ void Motor::processCanMsg(int cmdID, unsigned char data[])
 
         long long actualTime = llround(KAL::GetTime());
         VelocityRaw = (long)(PositionRaw - OldPositionRaw)/((actualTime - updateTime)*1E-9);
-        Velocity = (Position - OldPosition)/((actualTime - updateTime)*1E-9);
+        Velocity = VelocityRaw*2*PI/jointReduction;
 
         OldPositionRaw = PositionRaw;
         OldPosition = Position;
@@ -261,12 +262,12 @@ void Motor::processCanMsg(int cmdID, unsigned char data[])
         if(data[0] == 0x2B)
         {
             Velocity = pcanData2Double(data,1)*360/jointReduction;
-            //    KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "States Update", "ID = %X,  vel = %X%X%X%X", ID, data[4], data[3], data[2], data[1]);
+            KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "States Update", "ID = %X,  vel = %X%X%X%X", ID, data[4], data[3], data[2], data[1]);
         }
         else if(data[0] == 0x40)
         {
             PositionGrad = pcanData2Double(data,1)*360/jointReduction;
-            //   KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "States Update", "ID = %X,  pos = %X%X%X%X", ID, data[4], data[3], data[2], data[1]);
+            KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "States Update", "ID = %X,  pos = %X%X%X%X", ID, data[4], data[3], data[2], data[1]);
         }
     }//else if(cmdID == TPDO2_COBID)
     else if(cmdID == TPDO1_COBID) //0x180(384D) - TxPDO1 (statusWord)

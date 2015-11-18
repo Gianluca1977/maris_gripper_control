@@ -407,7 +407,11 @@ void PubJointState::rt_thread_handler()
 
 /* ******************************** */
 // Gripper Class Contructor
+#ifdef ROS_IF
 Controller::Controller(int arg_c, char** arg_v, std::string node_Name) : Gripper(nodeIds), ControllerData(arg_c, arg_v, node_Name), RosInterface(arg_c, arg_v, node_Name)//, StateMachine(CtrlHandler::ST_MAX_STATES, "Controller")
+#else
+Controller::Controller(int arg_c, char** arg_v, std::string node_Name) : Gripper(nodeIds), ControllerData(arg_c, arg_v, node_Name)//, RosInterface(arg_c, arg_v, node_Name)// StateMachine(CtrlHandler::ST_MAX_STATES, "Controller")
+#endif
 {
 #ifdef _DEBUG_
     KAL::DebugConsole::Write(LOG_LEVEL_NOTICE, "CONTROLLER", "Calling Constructor of %p", this);

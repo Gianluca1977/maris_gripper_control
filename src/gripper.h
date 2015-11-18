@@ -4,7 +4,13 @@
 #include "motorguard.h"
 #include "controllerdata.h"
 
-#define MOTOR_GUARD
+//#define MOTOR_GUARD
+
+#define ENCODER_PULSE 3000
+#define FIRST_STAGE   14
+#define SECOND_STAGE  20
+#define MOTOR_PULLEY  12
+#define FINGER_PULLEY 33
 
 class Gripper : virtual public ControllerData
 {
